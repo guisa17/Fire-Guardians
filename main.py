@@ -1,9 +1,12 @@
 import pygame
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from src.game.fire import Fire
+from src.game.player import Player
+
 
 def main():
     pygame.init()
-    
+
     # Configurar la pantalla
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Fire Guardians")
@@ -12,8 +15,11 @@ def main():
     clock = pygame.time.Clock()
 
     # Colores de prueba
-    WHITE = (255, 255, 255)
     GREEN = (34, 139, 34)
+
+    # Inicializar jugador y fuegos
+    player = Player()
+    fires = Fire.spawn_random_fires(amount=5)  # Generar 5 fuegos aleatorios
 
     # Bucle principal
     running = True
@@ -23,11 +29,19 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Actualizar la lógica del juego (vacío por ahora)
+        # Detectar entradas del teclado
+        keys = pygame.key.get_pressed()
+        player.move(keys)
 
         # Dibujar la pantalla
         screen.fill(GREEN)  # Fondo verde
-        pygame.draw.rect(screen, WHITE, (SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT // 2 - 50, 100, 100))  # Cuadrado blanco
+
+        # Dibujar fuegos
+        for fire in fires:
+            fire.draw(screen)
+
+        # Dibujar jugador
+        player.draw(screen)
 
         # Actualizar la pantalla
         pygame.display.flip()
@@ -37,6 +51,7 @@ def main():
 
     # Salir de Pygame
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()
