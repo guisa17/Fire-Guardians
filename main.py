@@ -16,22 +16,28 @@ def main():
 
     running = True
     while running:
-        dt = clock.tick(FPS) / 1000
+        dt = clock.tick(FPS) / 1000  # Tiempo transcurrido en segundos
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
         keys = pygame.key.get_pressed()
-        player.update(dt, keys)
+        player.update(dt, keys, fires)
 
+        # Verificar apagado de fuego al presionar ESPACIO
         if keys[pygame.K_SPACE]:
             player.extinguish_fire(fires)
 
+        # Verificar si el jugador está en el área del fuego y reducir vida
+        for fire in fires:
+            fire.check_player_in_fire(player, dt)
+
+        # Dibujar fondo, fuegos, jugador y estado
         screen.fill(GREEN)
         for fire in fires:
             fire.draw(screen)
         player.draw(screen)
-        draw_status(screen, player)
+        draw_status(screen, player)  # Muestra puntaje, agua y vida en pantalla
         pygame.display.flip()
 
     pygame.quit()

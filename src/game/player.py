@@ -1,11 +1,3 @@
-"""
-Controles del jugador
-
-- Movimientos básicos
-- Animaciones
-- Tanque de agua
-"""
-
 import pygame
 from src.core.utils import load_image
 from src.core.settings import PLAYER_SPEED, PLAYER_INITIAL_WATER, SPRITE_SCALE
@@ -17,6 +9,7 @@ class Player:
         self.speed = PLAYER_SPEED
         self.water = PLAYER_INITIAL_WATER
         self.score = 0
+        self.life = 100  # Vida inicial
         self.direction = 0
         self.is_running = False
         self.animation_timer = 0
@@ -54,10 +47,13 @@ class Player:
         """Apaga fuegos cercanos."""
         for fire in fires:
             if fire.is_extinguished_by(self):
-                self.score += 10
-                self.water -= 20
+                self.score += 10  # Incrementar puntaje
+                self.water -= 20  # Reducir agua
 
-    def update(self, dt, keys):
+    def update(self, dt, keys, fires):
+        """
+        Actualiza el estado del jugador.
+        """
         dx, dy = 0, 0
         previous_running = self.is_running
         self.is_running = False
@@ -89,6 +85,7 @@ class Player:
         self.x += dx
         self.y += dy
 
+        # Animación
         self.animation_timer += dt
         frame_rate = 0.1 if self.is_running else 0.3
 

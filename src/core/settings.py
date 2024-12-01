@@ -7,7 +7,7 @@ SCREEN_HEIGHT = 540
 FPS = 60
 
 # Escala de sprites ((960, 540) -> (160, 90))
-SPRITE_SCALE = 6
+SPRITE_SCALE = 3
 
 # Configuración general del jugador
 PLAYER_SPEED = 5

@@ -32,8 +32,16 @@ def draw_text(screen, text, font_path, size, color, x, y):
     screen.blit(text_surface, (x, y))
 
 def draw_status(screen, player):
-    font = pygame.font.Font(None, 36)
+    """
+    Dibuja el puntaje, el nivel de agua y la vida del jugador en la pantalla.
+    """
+    font = pygame.font.Font(None, 36)  # Usa una fuente predeterminada
     score_text = font.render(f"Puntaje: {player.score}", True, (255, 255, 255))
     water_text = font.render(f"Agua: {player.water}", True, (255, 255, 255))
-    screen.blit(score_text, (10, 10))
+    life_text = font.render(f"Vida: {player.life}", True, (255, 255, 255))
+
+    # Posicionar los textos en pantalla
+    screen.blit(score_text, (10, 10))  # Esquina superior izquierda
     screen.blit(water_text, (10, 50))
+    screen.blit(life_text, (10, 90))
+
