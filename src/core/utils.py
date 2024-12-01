@@ -30,3 +30,10 @@ def draw_text(screen, text, font_path, size, color, x, y):
     font = pygame.font.Font(full_path, size)
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (x, y))
+
+def draw_status(screen, player):
+    font = pygame.font.Font(None, 36)
+    score_text = font.render(f"Puntaje: {player.score}", True, (255, 255, 255))
+    water_text = font.render(f"Agua: {player.water}", True, (255, 255, 255))
+    screen.blit(score_text, (10, 10))
+    screen.blit(water_text, (10, 50))
