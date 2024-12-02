@@ -24,10 +24,14 @@ def main():
                 running = False
 
         keys = pygame.key.get_pressed()
-        player.update(dt, keys)
+        player.update(dt, keys, fires)
 
         if keys[pygame.K_SPACE]:
             player.extinguish_fire(fires)
+
+        # Verificar si el jugador está en el área del fuego y reducir vida
+        for fire in fires:
+            fire.check_player_in_fire(player, dt)
 
         # Actualizamos el estado de los animales (verificamos si el jugador está rescatándolos)
         for animal in animals:
@@ -43,7 +47,7 @@ def main():
         for animal in animals:
             animal.draw(screen)  # Dibujamos los animales en pantalla
         player.draw(screen)
-        draw_status(screen, player)
+        draw_status(screen, player) # Muestra puntaje, agua y vida en pantalla
         pygame.display.flip()
 
     pygame.quit()

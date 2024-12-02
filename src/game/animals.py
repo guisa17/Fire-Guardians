@@ -73,7 +73,7 @@ class Animal:
 
         # Si está cerca y el mensaje debe mostrarse, dibujamos el texto
         if self.rescue_message_shown:
-            draw_text(screen, "Presiona R para rescatar", "font.ttf", 30, (255, 255, 255), self.x, self.y - 30)
+            draw_text(screen, "Presiona R para rescatar", "font.ttf", 20, (255, 255, 255), self.x, self.y - 30)
 
     def rescue(self):
         self.rescued = True
