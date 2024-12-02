@@ -1,23 +1,62 @@
 import pygame
 import random
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src.core.utils import load_image
 
 class Fire:
-    def __init__(self, x, y, size=20):
+    def __init__(self, x, y, size=60):
         self.x = x
         self.y = y
         self.size = size
-        self.color = (255, 0, 0)  # Rojo
         self.extinguished = False  # Estado del fuego
         self.player_in_fire_time = 0  # Tiempo acumulado con el jugador dentro del fuego
+        self.animation_timer = 0
+        self.frame_index = 0
+
+        # Cargar los sprites del fuego
+        self.sprites = self.load_spritesheet("items/fire/fire_sprite.png", 8, 4)
+
+    def load_spritesheet(self, path, cols, rows):
+        """
+        Divide el spritesheet en subimágenes individuales.
+        """
+        spritesheet = load_image(path)
+        sheet_width, sheet_height = spritesheet.get_size()
+        sprite_width = sheet_width // cols
+        sprite_height = sheet_height // rows
+
+        sprites = []
+        for row in range(rows):
+            for col in range(cols):
+                x = col * sprite_width
+                y = row * sprite_height
+                sprite = spritesheet.subsurface(pygame.Rect(x, y, sprite_width, sprite_height))
+                sprite = pygame.transform.scale(sprite, (self.size, self.size))
+                sprites.append(sprite)
+        return sprites
+
+    def update(self, dt):
+        """
+        Actualiza el índice de animación para crear el efecto animado.
+        """
+        if not self.extinguished:
+            self.animation_timer += dt
+            if self.animation_timer >= 0.03:  # Cambiar el frame cada 0.1 segundos
+                self.frame_index = (self.frame_index + 1) % len(self.sprites)
+                self.animation_timer = 0
 
     def draw(self, screen):
-        """Dibuja el fuego si no ha sido apagado."""
+        """
+        Dibuja el fuego animado si no está apagado.
+        """
         if not self.extinguished:
-            pygame.draw.rect(screen, self.color, (self.x, self.y, self.size, self.size))
+            current_sprite = self.sprites[self.frame_index]
+            screen.blit(current_sprite, (self.x, self.y))
 
     def is_extinguished_by(self, player):
-        """Verifica si el fuego está siendo apagado por el jugador."""
+        """
+        Verifica si el fuego está siendo apagado por el jugador.
+        """
         player_rect = pygame.Rect(
             player.x, player.y, player.run_sprites[0][0].get_width(), player.run_sprites[0][0].get_height()
         )
@@ -28,7 +67,7 @@ class Fire:
             self.extinguished = True
             return True
         return False
-    
+
     def check_player_in_fire(self, player, dt):
         """
         Detecta si el jugador está dentro del fuego y actualiza el temporizador.
@@ -49,7 +88,9 @@ class Fire:
 
     @staticmethod
     def spawn_random_fires(amount):
-        """Genera una lista de fuegos en posiciones aleatorias."""
+        """
+        Genera una lista de fuegos en posiciones aleatorias.
+        """
         fires = []
         for _ in range(amount):
             x = random.randint(0, SCREEN_WIDTH - 16)

@@ -46,6 +46,7 @@ def main():
 
             # Verificar si el jugador está en el área del fuego y reducir vida
             for fire in fires:
+                fire.update(dt)
                 fire.check_player_in_fire(player, dt)
 
             # Actualizar el estado de los animales
