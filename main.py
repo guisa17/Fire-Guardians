@@ -1,6 +1,7 @@
 import pygame
 from src.game.player import Player
 from src.game.fire import Fire
+from src.game.water_station import WaterStation
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
 from src.core.utils import generate_random_fire
 
@@ -21,6 +22,9 @@ def main():
 
     # Crear al jugador en el centro de la pantalla
     player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
+    # Crear estación de agua
+    water_station = WaterStation(100, 100)
 
     # Crear fuegos aleatorios evitando al jugador
     num_fires = 5
@@ -50,9 +54,10 @@ def main():
         keys = pygame.key.get_pressed()
 
         # Actualizar lógica del jugador
-        player.update(dt, keys)
+        player.update(dt, keys, water_station)
         player.interact_with_fire(fires, keys)
         player.handle_collision(fires, dt)  # Manejar colisiones con el fuego
+        player.recharge_water(water_station, keys, dt=dt)
 
         # Actualizar lógica del fuego
         for fire in fires:
@@ -61,9 +66,11 @@ def main():
 
         # Dibujar elementos en pantalla
         screen.fill((34, 139, 34))  # Fondo verde
+        water_station.draw(screen)
         player.draw(screen)         # Dibujar jugador
         player.draw_water_bar(screen)  # Dibujar barra de agua
         player.draw_lives(screen)      # Dibujar corazones de vida
+        
 
         for fire in fires:
             fire.draw(screen)  # Dibujar el fuego
