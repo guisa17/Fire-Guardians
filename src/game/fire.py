@@ -6,6 +6,7 @@ Mecánicas del fuego
 """
 
 import pygame
+import random
 from src.core.utils import load_image
 from src.core.settings import SPRITE_SCALE
 
@@ -23,6 +24,10 @@ class Fire:
         self.animation_timer = 0
         self.frame_duration = 0.2
         self.is_active = True
+
+        self.time_to_spread = 5
+        self.spread_timer = 0
+        self.spread_radius = 50
 
         """
         Carga de sprites
@@ -82,6 +87,42 @@ class Fire:
             self.intensity -= amount
             if self.intensity <= 0:
                 self.is_active = False  # se apaga
+
+
+    def spread(self, fire_list, max_fires, player):
+        """
+        Propaga el fuego si no se apaga a tiempo
+        """
+        if len(fire_list) >= max_fires:
+            return
+        
+        spread_attempts = 5
+        for _ in range(spread_attempts):
+            new_x = self.x + random.randint(-self.spread_radius, self.spread_radius)
+            new_y = self.y + random.randint(-self.spread_radius, self.spread_radius)
+
+            player_dist_x = abs(new_x - player.x)
+            player_dist_y = abs(new_y - player.y)
+            
+            if player_dist_x < 50 and player_dist_y < 50:
+                continue
+
+            new_fire = Fire(new_x, new_y)
+            fire_list.append(new_fire)
+            break
+
+    
+    def update_spread(self, dt, fire_list, max_fires, player):
+        """
+        Actualizar temporizador de propagación
+        """
+        if not self.is_active:
+            return
+
+        self.spread_timer += dt
+        if self.spread_timer >= self.time_to_spread:
+            self.spread_timer = 0
+            self.spread(fire_list, max_fires, player)
 
     
     def update(self, dt):

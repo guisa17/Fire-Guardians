@@ -31,6 +31,7 @@ def main():
     fire_positions = generate_random_fire(num_fires, fire_width, fire_height, player_position=player_position, min_distance=min_distance)
 
     fires = [Fire(x, y) for x, y in fire_positions]
+    max_fires = 10
 
     # Bucle principal
     running = True
@@ -54,6 +55,7 @@ def main():
         # Actualizar lógica del fuego
         for fire in fires:
             fire.update(dt)
+            fire.update_spread(dt, fires, max_fires, player)
 
         # Dibujar elementos en pantalla
         screen.fill((34, 139, 34))  # Fondo verde
