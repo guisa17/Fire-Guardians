@@ -1,74 +1,79 @@
 import pygame
-from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
-from src.game.fire import Fire
 from src.game.player import Player
-from src.core.utils import draw_status
-from src.game.animals import Animal  # Importamos la clase Animal
-from src.states.main_menu import MainMenu  # Importamos la clase MainMenu
+from src.game.fire import Fire
+from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
+from src.core.utils import generate_random_fire
+
 
 def main():
+    """
+    Bucle principal del juego para probar la funcionalidad del jugador.
+    """
+    # Inicializar Pygame
     pygame.init()
+
+    # Configurar pantalla
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Fire Guardians")
+    pygame.display.set_caption("Fire Guardians - Prueba del Jugador")
+    
+    # Configurar reloj para controlar FPS
     clock = pygame.time.Clock()
 
-    # Crear instancias del menú y el juego principal
-    menu = MainMenu(screen)
-    game_started = False
+    # Crear al jugador en el centro de la pantalla
+    player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
-    # Instancias necesarias para el juego principal
-    GREEN = (34, 139, 34)
-    player = Player(x=100, y=100)
-    fires = Fire.spawn_random_fires(amount=5)
-    animals = Animal.spawn_random_animals(amount=3)  # Generamos 3 animales aleatorios
+    # Crear fuegos aleatorios evitando al jugador
+    num_fires = 5
+    fire_width = 16 * SPRITE_SCALE
+    fire_height = 16 * SPRITE_SCALE
+    player_position = (player.x, player.y)
+    min_distance = 100  # Distancia mínima del fuego al jugador
+    min_fire_distance = 50
+    fire_positions = generate_random_fire(num_fires, fire_width, fire_height, player_position=player_position, 
+                                          min_distance=min_distance, min_fire_distance=min_fire_distance)
 
+    fires = [Fire(x, y) for x, y in fire_positions]
+    max_fires = 10
+
+    # Bucle principal
     running = True
     while running:
-        dt = clock.tick(FPS) / 1000
+        # Delta time
+        dt = clock.tick(FPS) / 1000  # Tiempo entre cuadros en segundos
+
+        # Manejar eventos
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
+        # Obtener teclas presionadas
         keys = pygame.key.get_pressed()
 
-        if not game_started:
-            # Actualizar y dibujar el menú principal
-            menu.update(dt)
-            menu.draw()
-            if keys[pygame.K_SPACE]:
-                game_started = True  # Iniciar el juego principal
-        else:
-            # Actualizar el juego principal
-            player.update(dt, keys, fires)
+        # Actualizar lógica del jugador
+        player.update(dt, keys)
+        player.interact_with_fire(fires, keys)
+        player.handle_collision(fires, dt)  # Manejar colisiones con el fuego
 
-            if keys[pygame.K_SPACE]:
-                player.extinguish_fire(fires)
+        # Actualizar lógica del fuego
+        for fire in fires:
+            fire.update(dt)
+            fire.update_spread(dt, fires, max_fires, player)
 
-            # Verificar si el jugador está en el área del fuego y reducir vida
-            for fire in fires:
-                fire.update(dt)
-                fire.check_player_in_fire(player, dt)
+        # Dibujar elementos en pantalla
+        screen.fill((34, 139, 34))  # Fondo verde
+        player.draw(screen)         # Dibujar jugador
+        player.draw_water_bar(screen)  # Dibujar barra de agua
+        player.draw_lives(screen)      # Dibujar corazones de vida
 
-            # Actualizar el estado de los animales
-            for animal in animals:
-                animal.update(dt, pygame.Rect(player.x, player.y, player.run_sprites[0][0].get_width(), player.run_sprites[0][0].get_height()))
+        for fire in fires:
+            fire.draw(screen)  # Dibujar el fuego
 
-                # Si el jugador está cerca y presiona R, rescatar al animal
-                if animal.is_rescuing and keys[pygame.K_r]:
-                    animal.rescue()
-
-            # Dibujar fondo, fuegos, animales, jugador y estado
-            screen.fill(GREEN)
-            for fire in fires:
-                fire.draw(screen)
-            for animal in animals:
-                animal.draw(screen)
-            player.draw(screen)
-            draw_status(screen, player)
-
+        # Actualizar pantalla
         pygame.display.flip()
 
+    # Finalizar Pygame
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()

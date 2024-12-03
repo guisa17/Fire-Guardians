@@ -1,99 +1,170 @@
+"""
+Mecánicas del fuego
+
+- Estado inicial
+- Interacción con el jugador
+"""
+
 import pygame
 import random
-from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from src.core.utils import load_image
+from src.core.settings import SPRITE_SCALE
+
 
 class Fire:
-    def __init__(self, x, y, size=60):
+    def __init__(self, x, y):
+        """
+        Inicialización del fuego en posiciones específicas
+        """
         self.x = x
         self.y = y
-        self.size = size
-        self.extinguished = False  # Estado del fuego
-        self.player_in_fire_time = 0  # Tiempo acumulado con el jugador dentro del fuego
+        self.intensity = 100    # vida del fuego
+
+        self.current_frame = 0
         self.animation_timer = 0
-        self.frame_index = 0
+        self.frame_duration = 0.2
+        self.is_active = True
 
-        # Cargar los sprites del fuego
-        self.sprites = self.load_spritesheet("items/fire/fire_sprite.png", 8, 4)
+        self.time_to_spread = 5
+        self.spread_timer = 0
+        self.spread_radius = 50
 
-    def load_spritesheet(self, path, cols, rows):
         """
-        Divide el spritesheet en subimágenes individuales.
+        Carga de sprites
+        """
+        self.frames = self.load_spritesheet("fire/fire.png", 4)
+
+    
+    def load_spritesheet(self, path, frame_count):
+        """
+        Dividir el spritesheet en sus respectivos sprites
         """
         spritesheet = load_image(path)
         sheet_width, sheet_height = spritesheet.get_size()
-        sprite_width = sheet_width // cols
-        sprite_height = sheet_height // rows
+        frame_width = sheet_width // frame_count
+        frame_height = sheet_height
 
-        sprites = []
-        for row in range(rows):
-            for col in range(cols):
-                x = col * sprite_width
-                y = row * sprite_height
-                sprite = spritesheet.subsurface(pygame.Rect(x, y, sprite_width, sprite_height))
-                sprite = pygame.transform.scale(sprite, (self.size, self.size))
-                sprites.append(sprite)
-        return sprites
+        frames = []
+        for i in range(frame_count):
+            frame = spritesheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+            frame = pygame.transform.scale(frame, (frame_width * SPRITE_SCALE, frame_height * SPRITE_SCALE))
+            frames.append(frame)
+        
+        return frames
 
+    
+    def get_rect(self):
+        """
+        Devuelve rectángulo de colisión
+        """
+        collision_width = 10 * SPRITE_SCALE
+        collision_height = 10 * SPRITE_SCALE
+
+        offset_x = 3 * SPRITE_SCALE
+        offset_y = 6 * SPRITE_SCALE
+
+        return pygame.Rect(
+            self.x + offset_x,
+            self.y + offset_y,
+            collision_width,
+            collision_height
+        )
+
+
+    def draw_collision_box(self, screen):
+        """
+        Dibujar rectángulo de colisión
+        """
+        collision_rect = self.get_rect()
+        pygame.draw.rect(screen, (255, 0, 0), collision_rect, 1)
+
+
+    def extinguish(self, amount):
+        """
+        Reducimos la intensidad del fuego con la interacción del jugador
+        """
+        if self.is_active:
+            self.intensity -= amount
+            if self.intensity <= 0:
+                self.is_active = False  # se apaga
+
+
+    def spread(self, fire_list, max_fires, player, min_fire_distance=50):
+        """
+        Propaga el fuego si no se apaga a tiempo
+        """
+        if len(fire_list) >= max_fires:
+            return
+        
+        spread_attempts = 5
+        for _ in range(spread_attempts):
+            new_x = self.x + random.randint(-self.spread_radius, self.spread_radius)
+            new_y = self.y + random.randint(-self.spread_radius, self.spread_radius)
+
+            player_dist_x = abs(new_x - player.x)
+            player_dist_y = abs(new_y - player.y)
+            
+            if player_dist_x < 50 and player_dist_y < 50:
+                continue
+            
+            close_to_fires = False
+            for fire in fire_list:
+                fire_dist_x = abs(new_x - fire.x)
+                fire_dist_y = abs(new_y - fire.y)
+                fire_dist = (fire_dist_x ** 2 + fire_dist_y ** 2) ** 0.5
+
+                if fire_dist < min_fire_distance:
+                    close_to_fires = True
+                    break
+            
+            if close_to_fires:
+                continue
+
+            new_fire = Fire(new_x, new_y)
+            fire_list.append(new_fire)
+            break
+
+    
+    def update_spread(self, dt, fire_list, max_fires, player):
+        """
+        Actualizar temporizador de propagación
+        """
+        if not self.is_active:
+            return
+
+        self.spread_timer += dt
+        if self.spread_timer >= self.time_to_spread:
+            self.spread_timer = 0
+            self.spread(fire_list, max_fires, player)
+
+    
     def update(self, dt):
         """
-        Actualiza el índice de animación para crear el efecto animado.
+        Actualizar animación del fuego
         """
-        if not self.extinguished:
-            self.animation_timer += dt
-            if self.animation_timer >= 0.03:  # Cambiar el frame cada 0.1 segundos
-                self.frame_index = (self.frame_index + 1) % len(self.sprites)
-                self.animation_timer = 0
+        if not self.is_active:
+            return
+        
+        self.animation_timer += dt
+        if self.animation_timer >= self.frame_duration:
+            self.animation_timer = 0
+            self.current_frame = (self.current_frame + 1) % len(self.frames)
+        
 
     def draw(self, screen):
         """
-        Dibuja el fuego animado si no está apagado.
+        Dibujar fuego en pantalla
         """
-        if not self.extinguished:
-            current_sprite = self.sprites[self.frame_index]
-            screen.blit(current_sprite, (self.x, self.y))
+        if self.is_active:
+            screen.blit(self.frames[self.current_frame], (self.x, self.y))
 
-    def is_extinguished_by(self, player):
-        """
-        Verifica si el fuego está siendo apagado por el jugador.
-        """
-        player_rect = pygame.Rect(
-            player.x, player.y, player.run_sprites[0][0].get_width(), player.run_sprites[0][0].get_height()
-        )
-        fire_rect = pygame.Rect(self.x, self.y, self.size, self.size)
+            # Barra de vida
+            bar_width = 32 * SPRITE_SCALE // 6
+            bar_height = 6
+            progress = self.intensity / 100
+            pygame.draw.rect(screen, (255, 0, 0), (self.x + 32, self.y - 10, bar_width, bar_height))
+            pygame.draw.rect(screen, (0, 255, 0), (self.x + 32, self.y - 10, bar_width * progress, bar_height))
 
-        # Verificar colisión y que el jugador tenga suficiente agua
-        if fire_rect.colliderect(player_rect) and player.water > 0 and not self.extinguished:
-            self.extinguished = True
-            return True
-        return False
+            self.draw_collision_box(screen)
 
-    def check_player_in_fire(self, player, dt):
-        """
-        Detecta si el jugador está dentro del fuego y actualiza el temporizador.
-        Reduce la vida del jugador si ha estado dentro del área por más de 1 segundo.
-        """
-        player_rect = pygame.Rect(
-            player.x, player.y, player.run_sprites[0][0].get_width(), player.run_sprites[0][0].get_height()
-        )
-        fire_rect = pygame.Rect(self.x, self.y, self.size, self.size)
-
-        if fire_rect.colliderect(player_rect) and not self.extinguished:
-            self.player_in_fire_time += dt
-            if self.player_in_fire_time >= 1.0:  # 1 segundo
-                player.life -= 10
-                self.player_in_fire_time = 0  # Reinicia el temporizador
-        else:
-            self.player_in_fire_time = 0  # Reinicia si el jugador no está en el fuego
-
-    @staticmethod
-    def spawn_random_fires(amount):
-        """
-        Genera una lista de fuegos en posiciones aleatorias.
-        """
-        fires = []
-        for _ in range(amount):
-            x = random.randint(0, SCREEN_WIDTH - 16)
-            y = random.randint(0, SCREEN_HEIGHT - 16)
-            fires.append(Fire(x, y))
-        return fires
+    

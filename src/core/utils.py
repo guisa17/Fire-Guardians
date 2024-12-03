@@ -4,6 +4,9 @@ Gestión de controles
 
 import pygame
 import os
+import random
+import math
+from src.core.settings import SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 def load_image(path, scale=None):
@@ -31,16 +34,39 @@ def draw_text(screen, text, font_path, size, color, x, y):
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (x, y))
 
-def draw_status(screen, player):
-    """
-    Dibuja el puntaje, el nivel de agua y la vida del jugador en la pantalla.
-    """
-    font = pygame.font.Font(None, 36)  # Usa una fuente predeterminada
-    score_text = font.render(f"Puntaje: {player.score}", True, (255, 255, 255))
-    water_text = font.render(f"Agua: {player.water}", True, (255, 255, 255))
-    life_text = font.render(f"Vida: {player.life}", True, (255, 255, 255))
 
-    # Posicionar los textos en pantalla
-    screen.blit(score_text, (10, 10))  # Esquina superior izquierda
-    screen.blit(water_text, (10, 50))
-    screen.blit(life_text, (10, 90))
+def generate_random_fire(num_fires, fire_width, fire_height, padding=20, 
+                         player_position=(0, 0), min_distance=100, min_fire_distance=50):
+    positions = []
+    player_x, player_y = player_position
+
+    for _ in range(num_fires):
+        attempt = 0
+        while attempt < 100:
+            x = random.randint(padding, SCREEN_WIDTH - fire_width - padding)
+            y = random.randint(padding, SCREEN_HEIGHT - fire_height - padding)
+            
+            distance_player = math.sqrt((x - player_x) ** 2 + (y - player_y) ** 2)
+
+            if distance_player < min_distance:
+                attempt += 1
+                continue
+
+            close_to_fires = False
+            for fx, fy in positions:
+                dist_fire = math.sqrt((x - fx) ** 2 + (y - fy) ** 2)
+                if dist_fire < min_fire_distance:
+                    close_to_fires = True
+                    break
+            
+            if close_to_fires:
+                attempt += 1
+                continue
+
+            positions.append((x, y))
+            break
+            
+        if attempt >= 100:
+            print(f"Advertencia: No se pudo generar un fuego en {attempt} intentos.")
+
+    return positions
