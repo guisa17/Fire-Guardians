@@ -175,9 +175,9 @@ class Player:
             dy = self.y - source.y
 
             if abs(dx) > abs(dy):
-                self.x += 30 if dx > 0 else -30
+                self.x += 50 if dx > 0 else -50
             else:
-                self.y += 30 if dy > 0 else -30
+                self.y += 50 if dy > 0 else -50
 
 
     def draw_water_bar(self, screen):
