@@ -2,7 +2,8 @@
 Potenciadores
 
 - Recarga de agua
-- Aumento de velocidad
+- Aumentar una vida
+- Aumentar velocidad
 - Escudo de invencibilidad
 """
 
