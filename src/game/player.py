@@ -31,6 +31,8 @@ class Player:
 
         self.collision_timer = 0
         self.invulnerable_timer = 0
+        self.blink_timer = 0
+        self.blink_state = True
 
         self.space_press_count = 0      # interacciones con spacebar
 
@@ -125,9 +127,9 @@ class Player:
                 collided = True
                 self.collision_timer += dt
                 
-                if self.collision_timer >= 1:
-                    print("collision")
-                    self.take_damage(1)
+                if self.collision_timer >= 0.5:
+                    print("damage")
+                    self.take_damage(1, fire)
                     self.invulnerable_timer = 1
                     self.collision_timer = 0
                     break
@@ -156,7 +158,7 @@ class Player:
             self.space_press_count = 0
 
 
-    def take_damage(self, amount=1):
+    def take_damage(self, amount=1, source=None):
         """
         Reduce la cantidad de vidas del jugador
         """
@@ -164,6 +166,18 @@ class Player:
         if self.current_lives <= 0:
             self.current_lives = 0
             print("Game over")
+
+        """
+        Retroceso tras recibir daño
+        """
+        if source:
+            dx = self.x - source.x
+            dy = self.y - source.y
+
+            if abs(dx) > abs(dy):
+                self.x += 30 if dx > 0 else -30
+            else:
+                self.y += 30 if dy > 0 else -30
 
 
     def draw_water_bar(self, screen):
@@ -238,6 +252,15 @@ class Player:
         """
         Dibuja al jugador en pantalla.
         """
+        # Parpadeo de invulnerabilidad
+        if self.invulnerable_timer > 0:
+            self.blink_timer += 0.1
+            if self.blink_timer >= 0.2:
+                self.blink_state = not self.blink_state
+                self.blink_timer = 0
+            if not self.blink_state:
+                return
+
         current_sprites = self.run_sprites if self.is_running else self.idle_sprites
         flipped = self.direction == 3  # Invertir para la izquierda
         sprite = self.get_sprite(current_sprites[0] if flipped else current_sprites[self.direction], self.frame_index, flipped)
