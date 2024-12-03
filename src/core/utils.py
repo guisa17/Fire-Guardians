@@ -35,19 +35,38 @@ def draw_text(screen, text, font_path, size, color, x, y):
     screen.blit(text_surface, (x, y))
 
 
-def generate_random_fire(num_fires, fire_width, fire_height, padding=20, player_position=(0, 0), min_distance=100):
+def generate_random_fire(num_fires, fire_width, fire_height, padding=20, 
+                         player_position=(0, 0), min_distance=100, min_fire_distance=50):
     positions = []
     player_x, player_y = player_position
 
     for _ in range(num_fires):
-        while True:
+        attempt = 0
+        while attempt < 100:
             x = random.randint(padding, SCREEN_WIDTH - fire_width - padding)
             y = random.randint(padding, SCREEN_HEIGHT - fire_height - padding)
             
-            distance = math.sqrt((x - player_x) ** 2 + (y - player_y) ** 2)
+            distance_player = math.sqrt((x - player_x) ** 2 + (y - player_y) ** 2)
 
-            if distance >= min_distance:
-                positions.append((x, y))
-                break
+            if distance_player < min_distance:
+                attempt += 1
+                continue
+
+            close_to_fires = False
+            for fx, fy in positions:
+                dist_fire = math.sqrt((x - fx) ** 2 + (y - fy) ** 2)
+                if dist_fire < min_fire_distance:
+                    close_to_fires = True
+                    break
+            
+            if close_to_fires:
+                attempt += 1
+                continue
+
+            positions.append((x, y))
+            break
+            
+        if attempt >= 100:
+            print(f"Advertencia: No se pudo generar un fuego en {attempt} intentos.")
 
     return positions

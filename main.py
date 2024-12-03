@@ -28,7 +28,9 @@ def main():
     fire_height = 16 * SPRITE_SCALE
     player_position = (player.x, player.y)
     min_distance = 100  # Distancia mínima del fuego al jugador
-    fire_positions = generate_random_fire(num_fires, fire_width, fire_height, player_position=player_position, min_distance=min_distance)
+    min_fire_distance = 50
+    fire_positions = generate_random_fire(num_fires, fire_width, fire_height, player_position=player_position, 
+                                          min_distance=min_distance, min_fire_distance=min_fire_distance)
 
     fires = [Fire(x, y) for x, y in fire_positions]
     max_fires = 10
