@@ -59,3 +59,16 @@ class WaterRefillPowerUp(PowerUp):
         if self.is_active:
             player.water = PLAYER_INITIAL_WATER
             self.is_active = False
+
+
+class ExtraLifePowerUp(PowerUp):
+    def __init__(self, x, y):
+        super().__init__(x, y, "heart/extra_heart.png")
+
+    def apply_effect(self, player):
+        """
+        Aumenta la vida del jugador, hasta el máximo permitido
+        """
+        if self.is_active and player.current_lives < player.max_lives:
+            player.current_lives += 1
+            self.is_active = False
