@@ -127,8 +127,7 @@ class Player:
                 collided = True
                 self.collision_timer += dt
                 
-                if self.collision_timer >= 0.5:
-                    print("damage")
+                if self.collision_timer >= 0.5:     # damage timer
                     self.take_damage(1, fire)
                     self.invulnerable_timer = 1
                     self.collision_timer = 0
