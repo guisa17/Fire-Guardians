@@ -4,6 +4,9 @@ Gestión de controles
 
 import pygame
 import os
+import random
+import math
+from src.core.settings import SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 def load_image(path, scale=None):
@@ -30,3 +33,21 @@ def draw_text(screen, text, font_path, size, color, x, y):
     font = pygame.font.Font(full_path, size)
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (x, y))
+
+
+def generate_random_fire(num_fires, fire_width, fire_height, padding=20, player_position=(0, 0), min_distance=100):
+    positions = []
+    player_x, player_y = player_position
+
+    for _ in range(num_fires):
+        while True:
+            x = random.randint(padding, SCREEN_WIDTH - fire_width - padding)
+            y = random.randint(padding, SCREEN_HEIGHT - fire_height - padding)
+            
+            distance = math.sqrt((x - player_x) ** 2 + (y - player_y) ** 2)
+
+            if distance >= min_distance:
+                positions.append((x, y))
+                break
+
+    return positions

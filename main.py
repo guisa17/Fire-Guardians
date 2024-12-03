@@ -1,7 +1,8 @@
 import pygame
 from src.game.player import Player
 from src.game.fire import Fire
-from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
+from src.core.utils import generate_random_fire
 
 
 def main():
@@ -21,12 +22,15 @@ def main():
     # Crear al jugador en el centro de la pantalla
     player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
-    # Crear fuego
-    fires = [
-        Fire(300, 200),
-        Fire(100, 300),
-        Fire(400, 100)
-    ]
+    # Crear fuegos aleatorios evitando al jugador
+    num_fires = 5
+    fire_width = 16 * SPRITE_SCALE
+    fire_height = 16 * SPRITE_SCALE
+    player_position = (player.x, player.y)
+    min_distance = 100  # Distancia mínima del fuego al jugador
+    fire_positions = generate_random_fire(num_fires, fire_width, fire_height, player_position=player_position, min_distance=min_distance)
+
+    fires = [Fire(x, y) for x, y in fire_positions]
 
     # Bucle principal
     running = True
