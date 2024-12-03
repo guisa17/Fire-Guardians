@@ -127,8 +127,7 @@ class Player:
                 collided = True
                 self.collision_timer += dt
                 
-                if self.collision_timer >= 0.5:
-                    print("damage")
+                if self.collision_timer >= 0.5:     # damage timer
                     self.take_damage(1, fire)
                     self.invulnerable_timer = 1
                     self.collision_timer = 0
@@ -138,22 +137,25 @@ class Player:
             self.collision_timer = 0
 
 
-    def interact_with_fire(self, fires, keys):
+    def is_within_distance(self, rect1, rect2, interaction_dist):
+        cx1, cy1 = rect1.center
+        cx2, cy2 = rect2.center
+        return abs(cx1 - cx2) < interaction_dist and abs(cy1 - cy2) < interaction_dist
+
+
+    def interact_with_fire(self, fires, keys, interaction_dist=100):
         """
         Interactuar con fuego
         """
         if keys[pygame.K_SPACE]:
             for fire in fires:
-                if fire.is_active:
-                    distance_x = abs(self.x - fire.x)
-                    distance_y = abs(self.y - fire.y)
-
-                    if distance_x < 100 and distance_y < 100:
-                        if self.water > 0:
-                            if self.space_press_count < 1:
-                                self.space_press_count += 1
-                                fire.extinguish(10)
-                                self.water -= 3     # diminuye agua !
+                right_dist = self.is_within_distance(self.get_rect(), fire.get_rect(), interaction_dist)
+                if fire.is_active and right_dist:
+                    if self.water > 0:
+                        if self.space_press_count < 1:
+                            self.space_press_count += 1
+                            fire.extinguish(10)
+                            self.water -= 3     # diminuye agua !
         else:
             self.space_press_count = 0
 
@@ -180,6 +182,29 @@ class Player:
                 self.y += 50 if dy > 0 else -50
 
 
+    def recharge_water(self, water_station, keys, recharge_rate=20, dt=1, interaction_dist=100):
+        """
+        Recargar agua con "R" presionado
+        """
+        if keys[pygame.K_r]:
+            right_dist = self.is_within_distance(self.get_rect(), water_station.get_rect(), interaction_dist)
+
+            if right_dist:
+                if self.water < PLAYER_INITIAL_WATER:
+                    self.water += recharge_rate * dt
+                    if self.water > PLAYER_INITIAL_WATER:
+                        self.water = PLAYER_INITIAL_WATER
+    
+
+    def interact_with_powerups(self, powerups):
+        """
+        Interactúa con los powerups disponibles
+        """
+        for powerup in powerups:
+            if powerup.is_active and self.get_rect().colliderect(powerup.get_rect()):
+                powerup.apply_effect(self)
+
+
     def draw_water_bar(self, screen):
         """
         Dibuja la barra de agua disponible
@@ -194,7 +219,7 @@ class Player:
         pygame.draw.rect(screen, (116,204,244), (bar_x, bar_y, bar_width * water_percentage, bar_height))
 
 
-    def update(self, dt, keys):
+    def update(self, dt, keys, water_station):
         """
         Actualizar estado del jugador
         """
@@ -224,13 +249,17 @@ class Player:
                 self.direction = 2
             self.is_running = True
 
-        
         # Normalizar velocidad diagonal -> dx**2 + dy**2 = 1
         if dx != 0 and dy != 0:
             diagonal_scale = 1 / (2 ** 0.5)
             dx *= diagonal_scale
             dy *= diagonal_scale
         
+        # Prevenir colisiones con la estación de agua
+        future_rect = self.get_rect().move(dx, dy)
+        if future_rect.colliderect(water_station.get_rect()):
+            dx, dy = 0, 0
+
         self.x += dx
         self.y += dy
 
