@@ -26,11 +26,20 @@ class Player:
         self.animation_timer = 0
         self.frame_index = 0
 
+        self.max_lives = 5
+        self.current_lives = 5
+
+        self.collision_timer = 0
+        self.invulnerable_timer = 0
+
+        self.space_press_count = 0      # interacciones con spacebar
+
         """
         Carga de sprites
         """
         self.idle_sprites = self.load_spritesheet("player/idle.png", 4, 3)
         self.run_sprites = self.load_spritesheet("player/run.png", 8, 3)
+        self.heart_sprite = self.load_heart_sprite()
 
     
     def load_spritesheet(self, path, cols, rows):
@@ -57,6 +66,7 @@ class Player:
 
         return sprites
 
+
     def get_sprite(self, sprite_list, index, flipped=False):
         """
         Obtiene el sprite, invirtiéndolo si es necesario
@@ -65,32 +75,136 @@ class Player:
         return pygame.transform.flip(sprite, True, False) if flipped else sprite
 
 
+    def load_heart_sprite(self):
+        """
+        Cargar sprite para las vidas
+        """
+        heart_sprite = load_image("heart/heart.png")
+        return pygame.transform.scale(heart_sprite, (7 * (SPRITE_SCALE - 2), 7 * (SPRITE_SCALE - 2)))
+
+
+    def get_rect(self):
+        """
+        Devuelve el rectángulo de colisión
+        """
+        collision_width = 10 * SPRITE_SCALE
+        collision_height = 14 * SPRITE_SCALE
+        
+        offset_x = 5 * SPRITE_SCALE
+        offset_y = 6 * SPRITE_SCALE
+
+        return pygame.Rect(
+            self.x + offset_x,
+            self.y + offset_y,
+            collision_width,
+            collision_height
+        )
+
+
+    # TMP !
+    def draw_collision_box(self, screen):
+        """
+        Dibujar rectángulo de colisión
+        """
+        collision_rect = self.get_rect()
+        pygame.draw.rect(screen, (255, 0, 0), collision_rect, 1)
+
+
+    def handle_collision(self, fires, dt):
+        """
+        Manejo de colisiones con el fuego
+        """
+        if self.invulnerable_timer > 0:
+            self.invulnerable_timer -= dt
+            self.collision_timer = 0
+            return
+        
+        collided = False
+        for fire in fires:
+            if fire.is_active and self.get_rect().colliderect(fire.get_rect()):
+                collided = True
+                self.collision_timer += dt
+                
+                if self.collision_timer >= 1:
+                    print("collision")
+                    self.take_damage(1)
+                    self.invulnerable_timer = 1
+                    self.collision_timer = 0
+                    break
+        
+        if not collided:
+            self.collision_timer = 0
+
+
+    def interact_with_fire(self, fires, keys):
+        """
+        Interactuar con fuego
+        """
+        if keys[pygame.K_SPACE]:
+            for fire in fires:
+                if fire.is_active:
+                    distance_x = abs(self.x - fire.x)
+                    distance_y = abs(self.y - fire.y)
+
+                    if distance_x < 100 and distance_y < 100:
+                        if self.water > 0:
+                            if self.space_press_count < 1:
+                                self.space_press_count += 1
+                                fire.extinguish(10)
+                                self.water -= 3     # diminuye agua !
+        else:
+            self.space_press_count = 0
+
+
+    def take_damage(self, amount=1):
+        """
+        Reduce la cantidad de vidas del jugador
+        """
+        self.current_lives -= amount
+        if self.current_lives <= 0:
+            self.current_lives = 0
+            print("Game over")
+
+
+    def draw_water_bar(self, screen):
+        """
+        Dibuja la barra de agua disponible
+        """
+        bar_width = 200
+        bar_height = 20
+        bar_x = 10
+        bar_y = 10 + (7 * (SPRITE_SCALE - 2)) + 10
+
+        pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
+        water_percentage = self.water / PLAYER_INITIAL_WATER
+        pygame.draw.rect(screen, (116,204,244), (bar_x, bar_y, bar_width * water_percentage, bar_height))
+
+
     def update(self, dt, keys):
         """
         Actualizar estado del jugador
         """
-
         dx, dy = 0, 0
         previous_running = self.is_running      # detecta cambios de estado
         self.is_running = False
 
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             dx += self.speed
             self.direction = 0
             self.is_running = True
 
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             dx -= self.speed
             self.direction = 3
             self.is_running = True
         
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             dy += self.speed
             if dx == 0:
                 self.direction = 1
             self.is_running = True
         
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
             dy -= self.speed
             if dx == 0:
                 self.direction = 2
@@ -130,3 +244,16 @@ class Player:
 
         screen.blit(sprite, (self.x, self.y))
 
+        self.draw_collision_box(screen)
+
+
+    def draw_lives(self, screen):
+        """
+        Dibuja los corazones de vida en pantalla
+        """
+        heart_spacing = 10 * (SPRITE_SCALE - 2)
+        for i in range(self.current_lives):
+            x = 10 + i * heart_spacing
+            y = 10
+            screen.blit(self.heart_sprite, (x, y))
+        
