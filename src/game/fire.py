@@ -89,7 +89,7 @@ class Fire:
                 self.is_active = False  # se apaga
 
 
-    def spread(self, fire_list, max_fires, player):
+    def spread(self, fire_list, max_fires, player, min_fire_distance=50):
         """
         Propaga el fuego si no se apaga a tiempo
         """
@@ -105,6 +105,19 @@ class Fire:
             player_dist_y = abs(new_y - player.y)
             
             if player_dist_x < 50 and player_dist_y < 50:
+                continue
+            
+            close_to_fires = False
+            for fire in fire_list:
+                fire_dist_x = abs(new_x - fire.x)
+                fire_dist_y = abs(new_y - fire.y)
+                fire_dist = (fire_dist_x ** 2 + fire_dist_y ** 2) ** 0.5
+
+                if fire_dist < min_fire_distance:
+                    close_to_fires = True
+                    break
+            
+            if close_to_fires:
                 continue
 
             new_fire = Fire(new_x, new_y)
