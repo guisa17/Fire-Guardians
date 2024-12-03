@@ -194,7 +194,16 @@ class Player:
                     self.water += recharge_rate * dt
                     if self.water > PLAYER_INITIAL_WATER:
                         self.water = PLAYER_INITIAL_WATER
-                    
+    
+
+    def interact_with_powerups(self, powerups):
+        """
+        Interactúa con los powerups disponibles
+        """
+        for powerup in powerups:
+            if powerup.is_active and self.get_rect().colliderect(powerup.get_rect()):
+                powerup.apply_effect(self)
+
 
     def draw_water_bar(self, screen):
         """
