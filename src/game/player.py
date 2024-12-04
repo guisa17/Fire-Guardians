@@ -220,7 +220,7 @@ class Player:
                 distance_y = abs(player_cy - animal_cy)
 
                 if distance_x < interaction_dist and distance_y < interaction_dist:
-                    if keys[pygame.K_z] and keys[pygame.K_x]:  # Requiere ambas teclas
+                    if keys[pygame.K_z] and keys[pygame.K_x]:  # ambas teclas
                         animal.rescue(3)
 
 
