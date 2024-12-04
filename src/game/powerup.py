@@ -51,7 +51,7 @@ class PowerUp:
 
 class WaterRefillPowerUp(PowerUp):
     def __init__(self, x, y):
-        super().__init__(x, y, "canteen/canteen.png")
+        super().__init__(x, y, "powerups\canteen.png")
 
     def apply_effect(self, player):
         """
@@ -64,7 +64,7 @@ class WaterRefillPowerUp(PowerUp):
 
 class ExtraLifePowerUp(PowerUp):
     def __init__(self, x, y):
-        super().__init__(x, y, "heart/extra_heart.png")
+        super().__init__(x, y, "powerups\extra_heart.png")
 
     def apply_effect(self, player):
         """

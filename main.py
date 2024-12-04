@@ -5,18 +5,19 @@ from src.game.water_station import WaterStation
 from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
 from src.core.utils import generate_random_fire
+from src.game.animals import Animal  # Importa la clase Animal
 
 
 def main():
     """
-    Bucle principal del juego para probar la funcionalidad del jugador.
+    Bucle principal del juego para probar la funcionalidad del jugador y rescatar animales.
     """
     # Inicializar Pygame
     pygame.init()
 
     # Configurar pantalla
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Fire Guardians - Prueba del Jugador")
+    pygame.display.set_caption("Fire Guardians - Prueba del Jugador y Rescate de Animales")
     
     # Configurar reloj para controlar FPS
     clock = pygame.time.Clock()
@@ -28,7 +29,6 @@ def main():
     water_station = WaterStation(100, 100)
 
     powerups = [WaterRefillPowerUp(100, 200), ExtraLifePowerUp(100, 300)]  # Cambia las coordenadas según el nivel
-
 
     # Crear fuegos aleatorios evitando al jugador
     num_fires = 5
@@ -42,6 +42,9 @@ def main():
 
     fires = [Fire(x, y) for x, y in fire_positions]
     max_fires = 10
+
+    # Crear animales para rescatar
+    animals = Animal.spawn_random_animals(3, rescue_time=3)  # Crea 3 animales con tiempo de rescate de 3 segundos
 
     # Bucle principal
     running = True
@@ -68,6 +71,11 @@ def main():
             fire.update(dt)
             fire.update_spread(dt, fires, max_fires, player)
 
+        # Actualizar y dibujar animales
+        for animal in animals:
+            animal.update(dt, player.get_rect(), keys)  # Actualiza la lógica de rescate de animales
+            print(f"Drawing animal at position: x={animal.x}, y={animal.y}")  # Verifica que los animales se están dibujando
+            animal.draw(screen)  # Dibuja el animal
 
         # Dibujar elementos en pantalla
         screen.fill((34, 139, 34))  # Fondo verde
@@ -76,7 +84,6 @@ def main():
         player.draw_water_bar(screen)  # Dibujar barra de agua
         player.draw_lives(screen)      # Dibujar corazones de vida
         
-
         for fire in fires:
             fire.draw(screen)  # Dibujar el fuego
 
