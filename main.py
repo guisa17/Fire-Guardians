@@ -67,6 +67,10 @@ async def main():
     max_fires = 10
     running = True
 
+    # Configuración del temporizador
+    font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 4))
+    time_left = 61  # Temporizador en segundos
+
     # Bucle principal
     while running:
         # Delta time
@@ -76,6 +80,11 @@ async def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+        
+        # Actualizar el temporizador
+        time_left -= dt
+        if time_left < 0:
+            time_left = 0
 
         # Obtener teclas presionadas
         keys = pygame.key.get_pressed()
@@ -112,6 +121,13 @@ async def main():
 
         for powerup in powerups:
             powerup.draw(screen)
+        
+        # Dibujar temporizador en la esquina superior derecha
+        timer_text = f"{int(time_left):02d}s"
+        timer_surface = font.render(timer_text, True, (255, 255, 255))  # Blanco
+        timer_x = SCREEN_WIDTH - timer_surface.get_width() - 10
+        timer_y = 10
+        screen.blit(timer_surface, (timer_x, timer_y))
 
         # Actualizar pantalla
         pygame.display.flip()
