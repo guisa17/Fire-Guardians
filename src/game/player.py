@@ -43,7 +43,6 @@ class Player:
         """
         self.idle_sprites = self.load_spritesheet("player/idle.png", 4, 3)
         self.run_sprites = self.load_spritesheet("player/run.png", 8, 3)
-        self.heart_sprite = self.load_heart_sprite()
 
     
     def load_spritesheet(self, path, cols, rows):
@@ -234,20 +233,6 @@ class Player:
         return dx, dy
 
 
-    def draw_water_bar(self, screen):
-        """
-        Dibuja la barra de agua disponible
-        """
-        bar_width = 200
-        bar_height = 20
-        bar_x = 10
-        bar_y = 10 + (7 * (SPRITE_SCALE - 2)) + 10
-
-        pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
-        water_percentage = self.water / PLAYER_INITIAL_WATER
-        pygame.draw.rect(screen, (116,204,244), (bar_x, bar_y, bar_width * water_percentage, bar_height))
-
-
     def update(self, dt, keys, water_station, animals):
         """
         Actualizar estado del jugador
@@ -337,13 +322,81 @@ class Player:
         self.draw_collision_box(screen)
 
 
-    def draw_lives(self, screen):
+    def draw_hud(self, screen):
         """
-        Dibuja los corazones de vida en pantalla
+        Dibuja el HUD con las barras de vida y agua.
         """
-        heart_spacing = 10 * (SPRITE_SCALE - 2)
-        for i in range(self.current_lives):
-            x = 10 + i * heart_spacing
-            y = 10
-            screen.blit(self.heart_sprite, (x, y))
-        
+        # Coordenadas iniciales y tamaños
+        icon_size = 7 * SPRITE_SCALE  # Tamaño del ícono con escala
+        bar_width = 35 * SPRITE_SCALE
+        bar_height = 5 * SPRITE_SCALE
+        bar_inner_width = 33 * SPRITE_SCALE
+        bar_inner_height = 3 * SPRITE_SCALE
+
+        # Colores
+        border_color = (0, 0, 0)
+        empty_color = (69, 61, 69)
+        life_color = (237, 28, 36)
+        water_color = (112, 154, 209)
+
+        # Cargar íconos
+        heart_icon = load_image("hud/heart.png")
+        heart_icon = pygame.transform.scale(heart_icon, (icon_size, icon_size))
+
+        drop_icon = load_image("hud/drop.png")
+        drop_icon = pygame.transform.scale(drop_icon, (icon_size, icon_size))
+
+        # Coordenadas del HUD
+        hud_x = 10
+        hud_y = 10
+
+        # Dibujar barra de vida
+        screen.blit(heart_icon, (hud_x, hud_y))
+        self.draw_progress_bar(
+            screen,
+            hud_x + icon_size + 15,
+            hud_y + (icon_size - bar_height) // 2,
+            bar_width,
+            bar_height,
+            bar_inner_width,
+            bar_inner_height,
+            self.current_lives / self.max_lives,
+            life_color,
+            empty_color,
+            border_color
+        )
+
+        # Dibujar barra de agua
+        screen.blit(drop_icon, (hud_x, hud_y + icon_size + 10))  # Debajo de la vida
+        self.draw_progress_bar(
+            screen,
+            hud_x + icon_size + 15,
+            hud_y + icon_size + 10 + (icon_size - bar_height) // 2,
+            bar_width,
+            bar_height,
+            bar_inner_width,
+            bar_inner_height,
+            self.water / PLAYER_INITIAL_WATER,
+            water_color,
+            empty_color,
+            border_color
+        )
+
+
+    def draw_progress_bar(self, screen, x, y, bar_width, bar_height, inner_width, inner_height, progress, fill_color, empty_color, border_color):
+        # Dibujar borde negro de la barra
+        pygame.draw.rect(screen, border_color, (x, y, bar_width, bar_height))
+
+        # Dibujar parte vacía 
+        pygame.draw.rect(
+            screen,
+            empty_color,
+            (x + 1 * SPRITE_SCALE, y + 1 * SPRITE_SCALE, inner_width, inner_height)
+        )
+
+        # Dibujar parte llena
+        pygame.draw.rect(
+            screen,
+            fill_color,
+            (x + 1 * SPRITE_SCALE, y + 1 * SPRITE_SCALE, int(inner_width * progress), inner_height)
+        )
