@@ -1,6 +1,7 @@
 import pygame
 from src.game.player import Player
 from src.game.fire import Fire
+from src.game.animals import Bear
 from src.game.water_station import WaterStation
 from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp, SpeedBoostPowerUp, ShieldPowerUp
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
@@ -23,6 +24,8 @@ def main():
 
     # Crear al jugador en el centro de la pantalla
     player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
+    animals = [Bear(400, 300)]
 
     # Crear estación de agua
     water_station = WaterStation(100, 100)
@@ -63,7 +66,7 @@ def main():
         keys = pygame.key.get_pressed()
 
         # Actualizar lógica del jugador
-        player.update(dt, keys, water_station)
+        player.update(dt, keys, water_station, animals)
         player.interact_with_fire(fires, keys)
         player.handle_collision(fires, dt)  # Manejar colisiones con el fuego
         player.recharge_water(water_station, keys, dt=dt)
@@ -84,6 +87,12 @@ def main():
 
         for fire in fires:
             fire.draw(screen)  # Dibujar el fuego
+
+        # Dentro del bucle principal
+        for animal in animals:
+            animal.update(dt)
+            animal.draw(screen)
+        player.interact_with_animals(animals, keys)
 
         for powerup in powerups:
             powerup.draw(screen)
