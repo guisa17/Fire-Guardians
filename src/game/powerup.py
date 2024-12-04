@@ -88,3 +88,19 @@ class SpeedBoostPowerUp(PowerUp):
             player.speed *= POWERUP_SPEED_MULTIPLIER
             player.powerup_timer = self.duration
             self.is_active = False
+
+
+class ShieldPowerUp(PowerUp):
+    def __init__(self, x, y):
+        """
+        Inicializa el power-up de escudo
+        """
+        super().__init__(x, y, "powerups/shield.png")
+
+    def apply_effect(self, player):
+        """
+        Aplica el efecto del escudo: invulnerabilidad temporal
+        """
+        if self.is_active:
+            player.invulnerable_timer = POWERUP_DURATION
+            self.is_active = False
