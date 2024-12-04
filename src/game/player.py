@@ -28,11 +28,13 @@ class Player:
 
         self.max_lives = 5
         self.current_lives = 5
-
+        
         self.collision_timer = 0
         self.invulnerable_timer = 0
         self.blink_timer = 0
         self.blink_state = True
+
+        self.powerup_timer = 0
 
         self.space_press_count = 0      # interacciones con spacebar
 
@@ -275,6 +277,12 @@ class Player:
 
         if previous_running != self.is_running:
             self.frame_index = 0
+        
+        # Reducir temporizador del power-up de velocidad
+        if self.powerup_timer > 0:
+            self.powerup_timer -= dt
+            if self.powerup_timer <= 0:
+                self.speed = PLAYER_SPEED
 
     
     def draw(self, screen):

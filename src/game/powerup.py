@@ -9,7 +9,7 @@ Potenciadores
 
 import pygame
 from src.core.utils import load_image
-from src.core.settings import SPRITE_SCALE, PLAYER_INITIAL_WATER
+from src.core.settings import SPRITE_SCALE, PLAYER_INITIAL_WATER, POWERUP_SPEED_MULTIPLIER, POWERUP_DURATION
 
 
 class PowerUp:
@@ -51,7 +51,7 @@ class PowerUp:
 
 class WaterRefillPowerUp(PowerUp):
     def __init__(self, x, y):
-        super().__init__(x, y, "canteen/canteen.png")
+        super().__init__(x, y, "powerups/canteen.png")
 
     def apply_effect(self, player):
         """
@@ -64,7 +64,7 @@ class WaterRefillPowerUp(PowerUp):
 
 class ExtraLifePowerUp(PowerUp):
     def __init__(self, x, y):
-        super().__init__(x, y, "heart/extra_heart.png")
+        super().__init__(x, y, "powerups/extra_heart.png")
 
     def apply_effect(self, player):
         """
@@ -72,4 +72,19 @@ class ExtraLifePowerUp(PowerUp):
         """
         if self.is_active and player.current_lives < player.max_lives:
             player.current_lives += 1
+            self.is_active = False
+
+
+class SpeedBoostPowerUp(PowerUp):
+    def __init__(self, x, y):
+        super().__init__(x, y, "powerups/leaves.png")
+        self.duration = POWERUP_DURATION
+
+    def apply_effect(self, player):
+        """
+        Incrementa temporalmente la velocidad del jugador
+        """
+        if self.is_active:
+            player.speed *= POWERUP_SPEED_MULTIPLIER
+            player.powerup_timer = self.duration
             self.is_active = False

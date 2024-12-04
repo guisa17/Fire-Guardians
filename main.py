@@ -2,7 +2,7 @@ import pygame
 from src.game.player import Player
 from src.game.fire import Fire
 from src.game.water_station import WaterStation
-from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp
+from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp, SpeedBoostPowerUp
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
 from src.core.utils import generate_random_fire
 
@@ -27,7 +27,7 @@ def main():
     # Crear estación de agua
     water_station = WaterStation(100, 100)
 
-    powerups = [WaterRefillPowerUp(100, 200), ExtraLifePowerUp(100, 300)]  # Cambia las coordenadas según el nivel
+    powerups = [WaterRefillPowerUp(100, 200), ExtraLifePowerUp(100, 300), SpeedBoostPowerUp(100, 400)]
 
 
     # Crear fuegos aleatorios evitando al jugador
