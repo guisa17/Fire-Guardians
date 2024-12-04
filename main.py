@@ -1,7 +1,7 @@
 import pygame
 from src.game.player import Player
 from src.game.fire import Fire
-from src.game.animals import Bear, Monkey
+from src.game.animals import Bear, Monkey, Bird
 from src.game.water_station import WaterStation
 from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp, SpeedBoostPowerUp, ShieldPowerUp
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
@@ -25,7 +25,11 @@ def main():
     # Crear al jugador en el centro de la pantalla
     player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
-    animals = [Bear(300, 300), Monkey(300, 200)]
+    animals = [
+        Bear(300, 300), 
+        Monkey(300, 200),
+        Bird(300, 100)
+        ]
 
     # Crear estación de agua
     water_station = WaterStation(100, 100)

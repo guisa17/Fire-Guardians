@@ -207,7 +207,7 @@ class Player:
                 powerup.apply_effect(self)
 
 
-    def interact_with_animals(self, animals, keys, interaction_dist=200):
+    def interact_with_animals(self, animals, keys, interaction_dist=100):
         """
         Interactúa con los animales para rescatarlos
         """
