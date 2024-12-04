@@ -1,110 +1,168 @@
+"""
+Animales Rescatables
+
+- Oso de Anteojos
+"""
+
 import pygame
-import random
-from src.core.utils import load_image, draw_text
-from src.core.settings import SPRITE_SCALE, SCREEN_WIDTH, SCREEN_HEIGHT
+from src.core.utils import load_image
+from src.core.settings import SPRITE_SCALE
 
-class Animal:
 
-    def __init__(self, x, y, rescue_time=2):
+class Bear:
+    def __init__(self, x, y):
+        """
+        Inicialización del Oso de Anteojos en una posición específica.
+        """
         self.x = x
         self.y = y
-        self.rescued = False
-        self.rescue_time = rescue_time  # Tiempo total de rescate
-        self.max_rescue_time = rescue_time  # Almacena el valor original
-        self.animation_timer = 0
-        self.frame_index = 0
-        self.row_index = 0  # Índice de la fila en la que estamos
-        self.is_rescuing = False
-        self.sprites = self.load_spritesheet("animals/llama_eat.png", 4, 4)
-        self.rescue_message_shown = False  # Indicador de si el mensaje de rescate ha sido mostrado
-        self.font = pygame.font.SysFont("Arial", 20)  # Fuente para el mensaje
+        self.life = 200  # El doble de vida que el fuego
+        self.is_rescued = False
 
-    def load_spritesheet(self, path, cols, rows):
-        """Carga y divide el spritesheet en una lista de sprites (filas y columnas)."""
+        self.current_frame = 0
+        self.animation_timer = 0
+        self.frame_duration = 0.3
+        self.frames = self.load_spritesheet("animals/bear.png", 4)
+
+        self.is_active = True
+
+
+    def load_spritesheet(self, path, frame_count):
+        """
+        Carga el spritesheet y divide los frames.
+        """
         spritesheet = load_image(path)
         sheet_width, sheet_height = spritesheet.get_size()
-        sprite_width = sheet_width // cols
-        sprite_height = sheet_height // rows
+        frame_width = sheet_width // frame_count
+        frame_height = sheet_height
 
-        sprites = []
-        for row in range(rows):
-            row_sprites = []
-            for col in range(cols):
-                x = col * sprite_width
-                y = row * sprite_height
-                sprite = spritesheet.subsurface(pygame.Rect(x, y, sprite_width, sprite_height))
-                sprite = pygame.transform.scale(sprite, (sprite_width * SPRITE_SCALE, sprite_height * SPRITE_SCALE))
-                row_sprites.append(sprite)
-            sprites.append(row_sprites)
-        return sprites
+        frames = []
+        for i in range(frame_count):
+            frame = spritesheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+            frame = pygame.transform.scale(frame, (frame_width * SPRITE_SCALE, frame_height * SPRITE_SCALE))
+            frames.append(frame)
 
-    def update(self, dt, player_rect, keys):
-        """Actualizar la animación y comprobar si el jugador está cerca del animal."""
-        if self.rescued:
-            return
+        return frames
 
-        animal_rect = pygame.Rect(self.x, self.y, self.sprites[0][0].get_width(), self.sprites[0][0].get_height())
-        if animal_rect.colliderect(player_rect):
-            self.is_rescuing = True
-            self.rescue_message_shown = True  # Muestra el mensaje cuando el jugador está cerca
-            # Si la tecla 'R' es presionada, reducir la barra de rescate
-            if keys[pygame.K_z] and self.rescue_time > 0:
-                self.rescue_time -= 1
-                if self.rescue_time <= 0:
-                    self.rescue()
-        else:
-            self.is_rescuing = False
-            self.rescue_message_shown = False  # Oculta el mensaje si el jugador se aleja
 
-        # Actualiza la animación del animal
-        self.animation_timer += dt
-        if self.animation_timer >= 0.2:  # Cambiar de frame cada 0.2 segundos
-            self.frame_index += 1
-            if self.frame_index >= len(self.sprites[0]):  # Si llegamos al final de la fila
-                self.frame_index = 0  # Reiniciar la columna
-                self.row_index += 1  # Avanzar a la siguiente fila
+    def get_rect(self):
+        """
+        Devuelve el rectángulo de colisión del oso.
+        """
+        collision_width = 20 * SPRITE_SCALE
+        collision_height = 20 * SPRITE_SCALE
+        return pygame.Rect(self.x, self.y, collision_width, collision_height)
 
-                # Si llegamos al final de todas las filas, volvemos a la primera fila
-                if self.row_index >= len(self.sprites):
-                    self.row_index = 0
 
-            self.animation_timer = 0
-            #print(f"Animal animation updated: {self.frame_index}, {self.row_index}")  # Verifica que la animación esté actualizándose
+    def rescue(self, amount):
+        """
+        Reduce la vida del oso hasta que sea rescatado.
+        """
+        if self.is_active:
+            self.life -= amount
+            if self.life <= 0:
+                self.life = 0
+                self.is_active = False
+
+
+    def update(self, dt):
+        """
+        Actualiza la animación del oso.
+        """
+        if not self.is_rescued:
+            self.animation_timer += dt
+            if self.animation_timer >= self.frame_duration:
+                self.animation_timer = 0
+                self.current_frame = (self.current_frame + 1) % len(self.frames)
+
 
     def draw(self, screen):
-        if self.rescued:
-            return
+        """
+        Dibuja el oso en pantalla.
+        """
+        if self.is_active:
+            screen.blit(self.frames[self.current_frame], (self.x, self.y))
 
-        # Dibuja el animal con el sprite actual
-        current_sprite = self.sprites[self.row_index][self.frame_index]
-        screen.blit(current_sprite, (self.x, self.y))
+            # Barra de progreso para el rescate
+            bar_width = 32 * SPRITE_SCALE // 6
+            bar_height = 6
+            progress = self.life / 200
+            pygame.draw.rect(screen, (255, 0, 0), (self.x + 32, self.y - 10, bar_width, bar_height))
+            pygame.draw.rect(screen, (0, 255, 0), (self.x + 32, self.y - 10, bar_width * progress, bar_height))
 
-        # Si está cerca y el mensaje debe mostrarse, dibujamos el texto
-        if self.rescue_message_shown:
-            draw_text(screen, "Presiona Z para rescatar", "font.ttf", 20, (255, 255, 255), self.x, self.y - 30)
 
-        # Dibujar la barra de rescate
-        rescue_bar_width = 200
-        rescue_bar_height = 20
-        # En el método draw() de Animal, para dibujar un borde visible:
-        pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(self.x, self.y, self.sprites[0][0].get_width(), self.sprites[0][0].get_height()), 2)
+class Monkey:
+    def __init__(self, x, y):
+        """
+        Inicialización del Mono Choro de Cola Amarilla en una posición específica.
+        """
+        self.x = x
+        self.y = y
+        self.life = 150  # Vida ajustada, menor que el oso pero significativa
+        self.is_rescued = False
 
-        rescue_bar = pygame.Rect(self.x - rescue_bar_width // 2, self.y - 60, rescue_bar_width, rescue_bar_height)
-        pygame.draw.rect(screen, (255, 0, 0), rescue_bar)  # Fondo de la barra (rojo)
-        rescue_bar_filled = pygame.Rect(self.x - rescue_bar_width // 2, self.y - 60, 
-                                        (self.rescue_time / self.max_rescue_time) * rescue_bar_width, rescue_bar_height)
-        pygame.draw.rect(screen, (0, 255, 0), rescue_bar_filled)  # Barra de rescate (verde)
+        self.current_frame = 0
+        self.animation_timer = 0
+        self.frame_duration = 0.3
+        self.frames = self.load_spritesheet("animals/monkey.png", 4)  # Ajusta el número de frames según el spritesheet
 
-    def rescue(self):
-        self.rescued = True
-        self.rescue_message_shown = False  # Ocultar el mensaje cuando el animal es rescatado
+        self.is_active = True
 
-    @staticmethod
-    def spawn_random_animals(amount, rescue_time=2):
-        animals = []
-        for _ in range(amount):
-            x = random.randint(0, SCREEN_WIDTH - 50)
-            y = random.randint(0, SCREEN_HEIGHT - 50)
-            #print(f"Animal spawn position: x={x}, y={y}")  # Verifica la posición
-            animals.append(Animal(x, y, rescue_time))
-        return animals
+    def load_spritesheet(self, path, frame_count):
+        """
+        Carga el spritesheet y divide los frames.
+        """
+        spritesheet = load_image(path)
+        sheet_width, sheet_height = spritesheet.get_size()
+        frame_width = sheet_width // frame_count
+        frame_height = sheet_height
+
+        frames = []
+        for i in range(frame_count):
+            frame = spritesheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+            frame = pygame.transform.scale(frame, (frame_width * SPRITE_SCALE, frame_height * SPRITE_SCALE))
+            frames.append(frame)
+
+        return frames
+
+    def get_rect(self):
+        """
+        Devuelve el rectángulo de colisión del mono.
+        """
+        collision_width = 16 * SPRITE_SCALE
+        collision_height = 16 * SPRITE_SCALE
+        return pygame.Rect(self.x, self.y, collision_width, collision_height)
+
+    def rescue(self, amount):
+        """
+        Reduce la vida del mono hasta que sea rescatado.
+        """
+        if self.is_active:
+            self.life -= amount
+            if self.life <= 0:
+                self.life = 0
+                self.is_active = False
+
+    def update(self, dt):
+        """
+        Actualiza la animación del mono.
+        """
+        if not self.is_rescued:
+            self.animation_timer += dt
+            if self.animation_timer >= self.frame_duration:
+                self.animation_timer = 0
+                self.current_frame = (self.current_frame + 1) % len(self.frames)
+
+    def draw(self, screen):
+        """
+        Dibuja el mono en pantalla.
+        """
+        if self.is_active:
+            screen.blit(self.frames[self.current_frame], (self.x, self.y))
+
+            # Barra de progreso para el rescate
+            bar_width = 32 * SPRITE_SCALE // 6
+            bar_height = 6
+            progress = self.life / 150
+            pygame.draw.rect(screen, (255, 0, 0), (self.x + 32, self.y - 10, bar_width, bar_height))
+            pygame.draw.rect(screen, (0, 255, 0), (self.x + 32, self.y - 10, bar_width * progress, bar_height))

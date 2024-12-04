@@ -28,11 +28,13 @@ class Player:
 
         self.max_lives = 5
         self.current_lives = 5
-
+        
         self.collision_timer = 0
         self.invulnerable_timer = 0
         self.blink_timer = 0
         self.blink_state = True
+
+        self.powerup_timer = 0
 
         self.space_press_count = 0      # interacciones con spacebar
 
@@ -154,7 +156,7 @@ class Player:
                     if self.water > 0:
                         if self.space_press_count < 1:
                             self.space_press_count += 1
-                            fire.extinguish(10)
+                            fire.extinguish(15)
                             self.water -= 3     # diminuye agua !
         else:
             self.space_press_count = 0
@@ -205,6 +207,33 @@ class Player:
                 powerup.apply_effect(self)
 
 
+    def interact_with_animals(self, animals, keys, interaction_dist=200):
+        """
+        Interactúa con los animales para rescatarlos
+        """
+        for animal in animals:
+            if animal.is_active:
+                player_cx, player_cy = self.get_rect().center
+                animal_cx, animal_cy = animal.get_rect().center
+
+                distance_x = abs(player_cx - animal_cx)
+                distance_y = abs(player_cy - animal_cy)
+
+                if distance_x < interaction_dist and distance_y < interaction_dist:
+                    if keys[pygame.K_z] and keys[pygame.K_x]:  # ambas teclas
+                        animal.rescue(3)
+
+
+    def handle_animal_collision(self, animals, dx, dy):
+        """
+        Maneja la colisión entre el jugador y los animales.
+        """
+        for animal in animals:
+            if animal.is_active and self.get_rect().move(dx, dy).colliderect(animal.get_rect()):
+                dx, dy = 0, 0
+        return dx, dy
+
+
     def draw_water_bar(self, screen):
         """
         Dibuja la barra de agua disponible
@@ -219,7 +248,7 @@ class Player:
         pygame.draw.rect(screen, (116,204,244), (bar_x, bar_y, bar_width * water_percentage, bar_height))
 
 
-    def update(self, dt, keys, water_station):
+    def update(self, dt, keys, water_station, animals):
         """
         Actualizar estado del jugador
         """
@@ -259,6 +288,9 @@ class Player:
         future_rect = self.get_rect().move(dx, dy)
         if future_rect.colliderect(water_station.get_rect()):
             dx, dy = 0, 0
+        
+        # Colisión con los animales
+        dx, dy = self.handle_animal_collision(animals, dx, dy)
 
         self.x += dx
         self.y += dy
@@ -275,6 +307,12 @@ class Player:
 
         if previous_running != self.is_running:
             self.frame_index = 0
+        
+        # Reducir temporizador del power-up de velocidad
+        if self.powerup_timer > 0:
+            self.powerup_timer -= dt
+            if self.powerup_timer <= 0:
+                self.speed = PLAYER_SPEED
 
     
     def draw(self, screen):
