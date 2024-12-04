@@ -1,4 +1,5 @@
 import pygame
+import asyncio
 from src.game.player import Player
 from src.game.fire import Fire
 from src.game.animals import Bear, Monkey, Bird
@@ -49,7 +50,7 @@ def initialize_game_objects():
     return player, animals, water_station, powerups, fires
 
 
-def main():
+async def main():
     """
     Bucle principal del juego.
     """
@@ -115,9 +116,11 @@ def main():
         # Actualizar pantalla
         pygame.display.flip()
 
+        await asyncio.sleep(0)
+
     # Finalizar Pygame
     pygame.quit()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
