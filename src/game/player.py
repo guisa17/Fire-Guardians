@@ -355,7 +355,7 @@ class Player:
         # self.draw_collision_box(screen)
 
 
-    def draw_hud(self, screen):
+    def draw_hud(self, screen, total_time, remaining_time):
         """
         Dibuja el HUD con las barras de vida y agua.
         """
@@ -372,7 +372,7 @@ class Player:
         empty_color = (69, 61, 69)
         life_color = (237, 28, 36)
         water_color = (112, 154, 209)
-        time_color = (147, 177, 38) if self.time_left >= 10 else (188, 51, 74)
+        time_color = (147, 177, 38) if remaining_time >= 10 else (188, 51, 74)
 
         # Cargar íconos
         heart_icon = load_image("hud/heart.png")
@@ -429,7 +429,7 @@ class Player:
             bar_height,
             time_bar_width - 2 * SPRITE_SCALE,
             bar_inner_height,
-            self.time_left / self.total_time,
+            remaining_time / total_time,
             time_color,
             empty_color,
             border_color

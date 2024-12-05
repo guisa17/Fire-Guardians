@@ -2,61 +2,79 @@ import pygame
 import asyncio
 from src.states.game_play import GamePlay
 from src.game.levels import LEVELS
-from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
-async def main():
-    """
-    Bucle principal del juego.
-    """
-    # Inicializar Pygame
-    pygame.init()
+class MainGame:
+    def __init__(self):
+        """
+        Inicializa la configuración principal del juego.
+        """
+        pygame.init()
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Fire Guardians")
+        self.level_index = 0
+        self.running = True
+        self.state = None
 
-    # Configurar pantalla y reloj
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Fire Guardians")
-    clock = pygame.time.Clock()
+    def load_level(self):
+        """
+        Carga el nivel actual y pasa la configuración desde levels.py.
+        """
+        level_config = LEVELS[self.level_index]
+        self.state = GamePlay(
+            screen=self.screen,
+            level_config=level_config,
+            on_game_over=self.game_over,
+            on_level_complete=self.next_level,
+        )
 
-    # Variables de control del juego
-    current_level = 1  # Iniciar desde el nivel 1
-    running = True
+    def game_over(self):
+        """
+        Manejo del fin del juego.
+        """
+        print("Game over")
+        self.running = False
 
-    while running:
-        # Configurar el nivel actual
-        game_play = GamePlay(current_level)
-        game_play.setup_level()
+    def next_level(self):
+        """
+        Manejo de la transición entre niveles.
+        """
+        self.level_index += 1
+        if self.level_index < len(LEVELS):
+            print(f"Loading level {self.level_index + 1}")
+            self.load_level()
+        else:
+            print("Congratulations! You completed all levels.")
+            self.running = False
 
-        # Bucle del nivel
-        while game_play.running:
-            # Delta time
-            dt = clock.tick(FPS) / 1000
+    async def run(self):
+        """
+        Bucle principal del juego.
+        """
+        self.load_level()
+        clock = pygame.time.Clock()
 
-            # Manejar eventos
+        while self.running:
+            # Procesar eventos
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
-                    game_play.running = False
+                    self.running = False
 
-            # Actualizar lógica del nivel
-            game_play.update(dt)
+            # Delta time y actualización del juego
+            dt = clock.tick(60) / 1000  # Limitar a 60 FPS
+            keys = pygame.key.get_pressed()
 
-            # Dibujar en pantalla
-            game_play.draw(screen)
+            if self.state:
+                self.state.update(dt, keys)
+                self.state.draw()
+                pygame.display.flip()  # Actualizar pantalla
 
-            # Actualizar pantalla
-            pygame.display.flip()
+            await asyncio.sleep(0)  # Permitir otras tareas del sistema
 
-            await asyncio.sleep(0)
-
-        # Si el tiempo se acabó, pasar al siguiente nivel o terminar el juego
-        if game_play.player.time_left <= 0:
-            current_level += 1
-            if current_level > len(LEVELS):
-                running = False  # No hay más niveles, terminar el juego
-
-    # Finalizar Pygame
-    pygame.quit()
+        pygame.quit()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    game = MainGame()
+    asyncio.run(game.run())
