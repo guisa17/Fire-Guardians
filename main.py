@@ -6,48 +6,29 @@ from src.game.animals import Bear, Monkey, Bird
 from src.game.water_station import WaterStation
 from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp, SpeedBoostPowerUp, ShieldPowerUp
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
-from src.core.utils import generate_random_fire
+from src.game.level_loader import load_level, draw_tiles, draw_elements
 
 
-def initialize_game_objects():
+def initialize_player(level_data):
     """
-    Inicializa los objetos principales del juego.
+    Inicializa al jugador en la posición inicial definida en el nivel.
     """
-    player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+    player = Player(0, 0)
+    start_position = level_data["player_start"]
+    player.x = start_position["x"]
+    player.y = start_position["y"]
+    return player
 
-    animals = [
-        Bear(300, 300),
-        Monkey(300, 200),
-        Bird(300, 100),
-    ]
 
-    water_station = WaterStation(100, 100)
-
-    powerups = [
-        WaterRefillPowerUp(100, 200),
-        ExtraLifePowerUp(100, 300),
-        SpeedBoostPowerUp(100, 400),
-        ShieldPowerUp(100, 500),
-    ]
-
-    num_fires = 5
-    fire_width = 16 * SPRITE_SCALE
-    fire_height = 16 * SPRITE_SCALE
-    player_position = (player.x, player.y)
-    min_distance = 100
-    min_fire_distance = 50
-
-    fire_positions = generate_random_fire(
-        num_fires,
-        fire_width,
-        fire_height,
-        player_position=player_position,
-        min_distance=min_distance,
-        min_fire_distance=min_fire_distance,
-    )
-    fires = [Fire(x, y) for x, y in fire_positions]
-
-    return player, animals, water_station, powerups, fires
+def load_element_sprites():
+    """
+    Carga los sprites para los elementos adicionales (hidrantes, etc.).
+    """
+    hydrant_sprite = pygame.image.load("assets/images/hydrant/hydrant.png").convert_alpha()
+    hydrant_sprite = pygame.transform.scale(hydrant_sprite, (16 * SPRITE_SCALE, 16 * SPRITE_SCALE))
+    return {
+        "hydrant": hydrant_sprite,
+    }
 
 
 async def main():
@@ -62,14 +43,23 @@ async def main():
     pygame.display.set_caption("Fire Guardians - Prueba del Jugador")
     clock = pygame.time.Clock()
 
-    # Inicializar objetos del juego
-    player, animals, water_station, powerups, fires = initialize_game_objects()
-    max_fires = 10
-    running = True
+    # Cargar nivel
+    level_data = load_level("level.json")
+
+    # Cargar spritesheet de tiles
+    tiles_spritesheet = pygame.image.load("assets/images/tiles/tiles.png").convert_alpha()
+
+    # Cargar sprites para elementos adicionales
+    element_sprites = load_element_sprites()
+
+    # Inicializar jugador en la posición inicial del nivel
+    player = initialize_player(level_data)
 
     # Configuración del temporizador
     font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 4))
     time_left = 61  # Temporizador en segundos
+
+    running = True
 
     # Bucle principal
     while running:
@@ -80,7 +70,7 @@ async def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
+
         # Actualizar el temporizador
         time_left -= dt
         if time_left < 0:
@@ -89,39 +79,17 @@ async def main():
         # Obtener teclas presionadas
         keys = pygame.key.get_pressed()
 
-        # Actualizar lógica del juego
-        player.update(dt, keys, water_station, animals)
-        player.interact_with_fire(fires, keys)
-        player.handle_collision(fires, dt)
-        player.recharge_water(water_station, keys, dt=dt)
+        # Actualizar lógica del jugador
+        player.update(dt, keys)
 
-        for fire in fires:
-            fire.update(dt)
-            fire.update_spread(dt, fires, max_fires, player)
+        # Dibujar nivel
+        screen.fill((0, 0, 0))  # Fondo negro
+        draw_tiles(screen, level_data["level"], tiles_spritesheet, 16, SPRITE_SCALE)
+        draw_elements(screen, level_data["elements"], element_sprites)
 
-        for animal in animals:
-            animal.update(dt)
-
-        player.interact_with_animals(animals, keys)
-
-        for powerup in powerups:
-            player.interact_with_powerups(powerups)
-
-        # Dibujar elementos en pantalla
-        screen.fill((34, 139, 34))  # Fondo verde
-        water_station.draw(screen)
+        # Dibujar jugador
         player.draw(screen)
-        player.draw_hud(screen)
 
-        for fire in fires:
-            fire.draw(screen)
-
-        for animal in animals:
-            animal.draw(screen)
-
-        for powerup in powerups:
-            powerup.draw(screen)
-        
         # Dibujar temporizador en la esquina superior derecha
         timer_text = f"{int(time_left):02d}s"
         timer_surface = font.render(timer_text, True, (255, 255, 255))  # Blanco

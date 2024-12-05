@@ -3,10 +3,10 @@ Configuración general
 """
 
 SCREEN_WIDTH = 960
-SCREEN_HEIGHT = 576
+SCREEN_HEIGHT = 720
 FPS = 60
 
-# Escala de sprites ((960, 540) -> (160, 90) -> (20x12))
+# Escala de sprites ((960, 720) -> (320, 240) -> (20x15))
 SPRITE_SCALE = 3
 
 # Configuración general del jugador

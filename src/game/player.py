@@ -233,7 +233,7 @@ class Player:
         return dx, dy
 
 
-    def update(self, dt, keys, water_station, animals):
+    def update(self, dt, keys, water_station=None, animals=None):
         """
         Actualizar estado del jugador
         """
@@ -270,12 +270,14 @@ class Player:
             dy *= diagonal_scale
         
         # Prevenir colisiones con la estación de agua
-        future_rect = self.get_rect().move(dx, dy)
-        if future_rect.colliderect(water_station.get_rect()):
-            dx, dy = 0, 0
+        if water_station is not None:
+            future_rect = self.get_rect().move(dx, dy)
+            if future_rect.colliderect(water_station.get_rect()):
+                dx, dy = 0, 0
         
         # Colisión con los animales
-        dx, dy = self.handle_animal_collision(animals, dx, dy)
+        if animals is not None:
+            dx, dy = self.handle_animal_collision(animals, dx, dy)
 
         self.x += dx
         self.y += dy

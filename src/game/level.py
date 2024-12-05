@@ -1,3 +1,0 @@
-"""
-Diseño del nivel
-"""
