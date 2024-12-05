@@ -12,9 +12,15 @@ class MainMenu:
         # Opciones del menú
         self.options = ["Iniciar Juego", "Instrucciones", "Créditos"]
 
+        # Control de tiempo para entrada
+        self.input_cooldown = 0.2  # 200 ms entre cambios
+        self.cooldown_timer = 0
+
     def update(self, dt):
         """Actualiza el estado del menú."""
         self.blink_timer += dt
+        self.cooldown_timer += dt
+
         if self.blink_timer >= 0.5:  # Cambiar visibilidad cada 0.5 segundos
             self.blink_visible = not self.blink_visible
             self.blink_timer = 0
@@ -37,10 +43,13 @@ class MainMenu:
 
     def handle_input(self, keys):
         """Maneja la entrada del usuario."""
-        if keys[pygame.K_UP]:
-            self.selected_option = (self.selected_option - 1) % len(self.options)
-        elif keys[pygame.K_DOWN]:
-            self.selected_option = (self.selected_option + 1) % len(self.options)
-        elif keys[pygame.K_SPACE]:
-            return self.selected_option  # Retorna la opción seleccionada
+        if self.cooldown_timer >= self.input_cooldown:  # Verificar si pasó el cooldown
+            if keys[pygame.K_UP]:
+                self.selected_option = (self.selected_option - 1) % len(self.options)
+                self.cooldown_timer = 0  # Reiniciar el cooldown
+            elif keys[pygame.K_DOWN]:
+                self.selected_option = (self.selected_option + 1) % len(self.options)
+                self.cooldown_timer = 0  # Reiniciar el cooldown
+            elif keys[pygame.K_SPACE]:
+                return self.selected_option  # Retorna la opción seleccionada
         return None
