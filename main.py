@@ -98,8 +98,8 @@ async def main():
     fires = create_random_fires(level_data, num_fires=5, tile_size=16 * SPRITE_SCALE, water_stations=water_stations)
 
     # Configuración del temporizador
-    font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 4))
-    time_left = 61  # Temporizador en segundos
+    # font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 1))
+    # time_left = 61  # Temporizador en segundos
 
     max_fires = 10
     running = True
@@ -115,9 +115,9 @@ async def main():
                 running = False
 
         # Actualizar el temporizador
-        time_left -= dt
-        if time_left < 0:
-            time_left = 0
+        player.time_left -= dt
+        if player.time_left < 0:
+            player.time_left = 0
 
         # Obtener teclas presionadas
         keys = pygame.key.get_pressed()
@@ -153,11 +153,7 @@ async def main():
         player.draw_hud(screen)
 
         # Dibujar temporizador en la esquina superior derecha
-        timer_text = f"{int(time_left):02d}s"
-        timer_surface = font.render(timer_text, True, (255, 255, 255))  # Blanco
-        timer_x = SCREEN_WIDTH - timer_surface.get_width() - 10
-        timer_y = 10
-        screen.blit(timer_surface, (timer_x, timer_y))
+        # todo
 
         # Actualizar pantalla
         pygame.display.flip()
