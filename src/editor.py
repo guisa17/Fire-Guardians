@@ -2,7 +2,8 @@ import pygame
 import json
 
 # Configuración básica
-TILE_SIZE = 16 * 2  # Tamaño de cada tile (escalado)
+SPRITE_SCALE = 3
+TILE_SIZE = 16 * SPRITE_SCALE  # Tamaño de cada tile (escalado)
 GRID_WIDTH = 20  # Ancho de la cuadrícula (número de tiles)
 GRID_HEIGHT = 15  # Alto de la cuadrícula (número de tiles)
 SCREEN_WIDTH = TILE_SIZE * GRID_WIDTH
@@ -16,7 +17,7 @@ clock = pygame.time.Clock()
 
 # Cargar tileset
 tileset = pygame.image.load("assets/images/tiles/tiles.png")
-tileset = pygame.transform.scale(tileset, (tileset.get_width() * 2, tileset.get_height() * 2))
+tileset = pygame.transform.scale(tileset, (tileset.get_width() * SPRITE_SCALE, tileset.get_height() * SPRITE_SCALE))
 TILE_COUNT = tileset.get_width() // TILE_SIZE
 
 # Cargar íconos para los elementos
@@ -86,7 +87,7 @@ def load_player_sprite():
     spritesheet = pygame.image.load("assets/images/player/idle.png")  # Ruta al spritesheet
     sprite_width, sprite_height = 20, 20  # Tamaño de cada sprite
     first_sprite = spritesheet.subsurface(pygame.Rect(0, 0, sprite_width, sprite_height))  # Extraer el primer sprite
-    return pygame.transform.scale(first_sprite, (sprite_width * 2, sprite_height * 2))  # Escalar si es necesario
+    return pygame.transform.scale(first_sprite, (sprite_width * SPRITE_SCALE, sprite_height * SPRITE_SCALE))  # Escalar si es necesario
 
 
 def draw_player_start():
@@ -158,8 +159,10 @@ def main():
                     selected_element = None
                 else:  # Clic en la cuadrícula
                     if selecting_player_start:
-                        player_start["x"] = x
-                        player_start["y"] = y
+                        grid_x = (x // TILE_SIZE) * TILE_SIZE
+                        grid_y = (y // TILE_SIZE) * TILE_SIZE
+                        player_start["x"] = grid_x
+                        player_start["y"] = grid_y
                         selecting_player_start = False
                     elif selected_element:
                         # Alinear los elementos al tile
