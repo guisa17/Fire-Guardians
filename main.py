@@ -1,10 +1,8 @@
 import pygame
 import asyncio
+import random
 from src.game.player import Player
 from src.game.fire import Fire
-from src.game.animals import Bear, Monkey, Bird
-from src.game.water_station import WaterStation
-from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp, SpeedBoostPowerUp, ShieldPowerUp
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
 from src.game.level_loader import load_level, draw_tiles, draw_elements, is_tile_walkable
 
@@ -31,6 +29,27 @@ def load_element_sprites():
     }
 
 
+def create_random_fires(level_data, num_fires, tile_size):
+    """
+    Crea fuegos en posiciones aleatorias dentro del nivel.
+    """
+    fires = []
+    for _ in range(num_fires):
+        while True:
+            col = random.randint(0, len(level_data["level"][0]) - 1)
+            row = random.randint(0, len(level_data["level"]) - 1)
+            x = col * tile_size
+            y = row * tile_size
+            fire_rect = pygame.Rect(x, y, tile_size, tile_size)
+
+            # Solo colocar fuego en tiles "walkable"
+            if is_tile_walkable(level_data, fire_rect, tile_size):
+                fires.append(Fire(x, y))
+                break
+    return fires
+
+
+
 async def main():
     """
     Bucle principal del juego.
@@ -54,6 +73,9 @@ async def main():
 
     # Inicializar jugador en la posición inicial del nivel
     player = initialize_player(level_data)
+
+    # Crear fuegos aleatorios
+    fires = create_random_fires(level_data, num_fires=5, tile_size=16 * SPRITE_SCALE)
 
     # Configuración del temporizador
     font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 4))
@@ -81,14 +103,29 @@ async def main():
 
         # Actualizar lógica del jugador
         player.update(dt, keys, level_data, 16 * SPRITE_SCALE)
+        player.interact_with_fire(fires, keys)
+        player.handle_collision(fires, dt)
+        # player.recharge_water()
+
+        # Actualizar lógica de los fuegos
+        for fire in fires:
+            fire.update(dt)
 
         # Dibujar nivel
         screen.fill((0, 0, 0))  # Fondo negro
         draw_tiles(screen, level_data["level"], tiles_spritesheet, 16, SPRITE_SCALE)
         draw_elements(screen, level_data["elements"], element_sprites)
 
+        # Dibujar fuegos
+        for fire in fires:
+            fire.draw(screen)
+        
+
         # Dibujar jugador
         player.draw(screen)
+
+        # Dibujar HUD del jugador
+        player.draw_hud(screen)
 
         # Dibujar temporizador en la esquina superior derecha
         timer_text = f"{int(time_left):02d}s"

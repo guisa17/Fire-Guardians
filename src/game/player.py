@@ -344,11 +344,11 @@ class Player:
         Dibuja el HUD con las barras de vida y agua.
         """
         # Coordenadas iniciales y tamaños
-        icon_size = 7 * SPRITE_SCALE  # Tamaño del ícono con escala
-        bar_width = 35 * SPRITE_SCALE
-        bar_height = 5 * SPRITE_SCALE
-        bar_inner_width = 33 * SPRITE_SCALE
-        bar_inner_height = 3 * SPRITE_SCALE
+        icon_size = 7 * (SPRITE_SCALE + 1)  # Tamaño del ícono con escala
+        bar_width = 35 * (SPRITE_SCALE + 1)
+        bar_height = 5 * (SPRITE_SCALE + 1)
+        bar_inner_width = 33 * (SPRITE_SCALE + 1)
+        bar_inner_height = 3 * (SPRITE_SCALE + 1)
 
         # Colores
         border_color = (0, 0, 0)
