@@ -134,7 +134,7 @@ class Player:
                 collided = True
                 self.collision_timer += dt
                 
-                if self.collision_timer >= 0.5:     # damage timer
+                if self.collision_timer >= 0.3:     # damage timer
                     self.take_damage(1, fire, level_data, tile_size)
                     self.invulnerable_timer = 1
                     self.collision_timer = 0
@@ -150,7 +150,7 @@ class Player:
         return abs(cx1 - cx2) < interaction_dist and abs(cy1 - cy2) < interaction_dist
 
 
-    def interact_with_fire(self, fires, keys, interaction_dist=100):
+    def interact_with_fire(self, fires, keys, interaction_dist=60):
         """
         Interactuar con fuego
         """
@@ -198,7 +198,7 @@ class Player:
                 self.x, self.y = new_x, new_y
 
 
-    def recharge_water(self, water_stations, keys, recharge_rate=20, dt=1, interaction_dist=100):
+    def recharge_water(self, water_stations, keys, recharge_rate=20, dt=1, interaction_dist=75):
         """
         Recargar agua con "R" presionado
         """

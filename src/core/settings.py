@@ -10,7 +10,7 @@ FPS = 60
 SPRITE_SCALE = 3
 
 # Configuración general del jugador
-PLAYER_SPEED = 5
+PLAYER_SPEED = 4
 PLAYER_INITIAL_WATER = 100
 
 # Configuración del fuego

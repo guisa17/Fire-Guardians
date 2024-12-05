@@ -20,6 +20,7 @@ class Fire:
         self.x = x
         self.y = y
         self.intensity = 100    # vida del fuego
+        self.has_interacted = False
 
         self.current_frame = 0
         self.animation_timer = 0
@@ -85,12 +86,13 @@ class Fire:
         Reducimos la intensidad del fuego con la interacción del jugador
         """
         if self.is_active:
+            self.has_interacted = True
             self.intensity -= amount
             if self.intensity <= 0:
                 self.is_active = False  # se apaga
 
 
-    def spread(self, fire_list, max_fires, player, hydrants, level_data, tile_size, min_fire_distance=50):
+    def spread(self, fire_list, max_fires, player, hydrants, level_data, tile_size, min_fire_distance=60):
         """
         Propaga el fuego si no se apaga a tiempo
         """
@@ -172,12 +174,11 @@ class Fire:
             screen.blit(self.frames[self.current_frame], (self.x, self.y))
 
             # Barra de vida
-            bar_width = 32 * SPRITE_SCALE // 6
-            bar_height = 6
-            progress = self.intensity / 100
-            pygame.draw.rect(screen, (255, 0, 0), (self.x + 32, self.y - 10, bar_width, bar_height))
-            pygame.draw.rect(screen, (0, 255, 0), (self.x + 32, self.y - 10, bar_width * progress, bar_height))
+            if self.has_interacted:
+                bar_width = 32 * SPRITE_SCALE // 6
+                bar_height = 6
+                progress = self.intensity / 100
+                pygame.draw.rect(screen, (188, 51, 74), (self.x + 16, self.y - 10, bar_width, bar_height))
+                pygame.draw.rect(screen, (242, 188, 82), (self.x + 16, self.y - 10, bar_width * progress, bar_height))
 
             self.draw_collision_box(screen)
-
-    
