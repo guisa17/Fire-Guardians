@@ -9,6 +9,7 @@ Controles del jugador
 import pygame
 from src.core.utils import load_image
 from src.core.settings import PLAYER_SPEED, PLAYER_INITIAL_WATER, SPRITE_SCALE
+from src.game.level_loader import load_level, is_tile_walkable
 
 
 class Player:
@@ -233,7 +234,7 @@ class Player:
         return dx, dy
 
 
-    def update(self, dt, keys, water_station=None, animals=None):
+    def update(self, dt, keys, level_data, tile_size, water_station=None, animals=None):
         """
         Actualizar estado del jugador
         """
@@ -279,8 +280,22 @@ class Player:
         if animals is not None:
             dx, dy = self.handle_animal_collision(animals, dx, dy)
 
-        self.x += dx
-        self.y += dy
+        # Rectángulo de colisión actual
+        current_rect = self.get_rect()
+
+        # Verificar movimiento horizontal
+        future_rect_x = current_rect.move(dx, 0)  # Solo mover horizontalmente
+        if is_tile_walkable(level_data, future_rect_x, tile_size):
+            self.x += dx
+        else:
+            dx = 0
+
+        # Verificar movimiento vertical
+        future_rect_y = current_rect.move(0, dy)  # Solo mover verticalmente
+        if is_tile_walkable(level_data, future_rect_y, tile_size):
+            self.y += dy
+        else:
+            dy = 0
 
         # Animación
         self.animation_timer += dt

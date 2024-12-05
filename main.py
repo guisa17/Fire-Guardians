@@ -6,7 +6,7 @@ from src.game.animals import Bear, Monkey, Bird
 from src.game.water_station import WaterStation
 from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp, SpeedBoostPowerUp, ShieldPowerUp
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
-from src.game.level_loader import load_level, draw_tiles, draw_elements
+from src.game.level_loader import load_level, draw_tiles, draw_elements, is_tile_walkable
 
 
 def initialize_player(level_data):
@@ -80,7 +80,7 @@ async def main():
         keys = pygame.key.get_pressed()
 
         # Actualizar lógica del jugador
-        player.update(dt, keys)
+        player.update(dt, keys, level_data, 16 * SPRITE_SCALE)
 
         # Dibujar nivel
         screen.fill((0, 0, 0))  # Fondo negro

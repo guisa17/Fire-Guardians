@@ -1,6 +1,6 @@
 import json
 import pygame
-
+from src.editor import TILE_PROPERTIES
 
 def load_level(filename):
     """
@@ -11,14 +11,38 @@ def load_level(filename):
     return level_data
 
 
+def is_tile_walkable(level_data, rect, tile_size):
+    """
+    Verifica si todas las esquinas y el centro del rectángulo están sobre tiles "walkable"
+    """
+    # Obtener las coordenadas de las esquinas y el centro del rectángulo
+    points_to_check = [
+        (rect.left, rect.top),      # ^ <
+        (rect.right, rect.top),     # ^ >
+        (rect.left, rect.bottom),   # v <
+        (rect.right, rect.bottom),  # v >
+        (rect.centerx, rect.centery)  # Centro
+    ]
+
+    # Verificar si cada punto está en un tile "walkable"
+    for x, y in points_to_check:
+        tile_x = int(x // tile_size)
+        tile_y = int(y // tile_size)
+
+        # Verificar límites del nivel
+        if 0 <= tile_x < len(level_data["level"][0]) and 0 <= tile_y < len(level_data["level"]):
+            tile_id = level_data["level"][tile_y][tile_x]
+            if not TILE_PROPERTIES.get(tile_id, {}).get("walkable", False):
+                return False  # no es walkable
+        else:
+            return False  # fuera de los límites del nivel
+
+    return True
+
+
 def draw_tiles(screen, tiles, spritesheet, tile_size, scale):
     """
     Dibuja los tiles del nivel en la pantalla.
-    - `screen`: Superficie de Pygame para dibujar.
-    - `tiles`: Matriz de tiles del nivel.
-    - `spritesheet`: Spritesheet que contiene los tiles.
-    - `tile_size`: Tamaño original de cada tile (sin escala).
-    - `scale`: Escala aplicada a los tiles.
     """
     scaled_tile_size = tile_size * scale
     for row_idx, row in enumerate(tiles):
@@ -41,10 +65,7 @@ def draw_tiles(screen, tiles, spritesheet, tile_size, scale):
 
 def draw_elements(screen, elements, element_sprites):
     """
-    Dibuja los elementos adicionales del nivel (como hidrantes).
-    - `screen`: Superficie de Pygame para dibujar.
-    - `elements`: Lista de elementos con posiciones y tipos.
-    - `element_sprites`: Diccionario de sprites de los elementos.
+    Dibuja los elementos adicionales del nivel.
     """
     for element in elements:
         element_type = element["type"]
