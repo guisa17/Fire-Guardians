@@ -119,7 +119,7 @@ class Player:
         pygame.draw.rect(screen, (255, 0, 0), collision_rect, 1)
 
 
-    def handle_collision(self, fires, dt):
+    def handle_collision(self, fires, dt, level_data, tile_size):
         """
         Manejo de colisiones con el fuego
         """
@@ -135,7 +135,7 @@ class Player:
                 self.collision_timer += dt
                 
                 if self.collision_timer >= 0.5:     # damage timer
-                    self.take_damage(1, fire)
+                    self.take_damage(1, fire, level_data, tile_size)
                     self.invulnerable_timer = 1
                     self.collision_timer = 0
                     break
@@ -167,7 +167,7 @@ class Player:
             self.space_press_count = 0
 
 
-    def take_damage(self, amount=1, source=None):
+    def take_damage(self, amount=1, source=None, level_data=None, tile_size=None):
         """
         Reduce la cantidad de vidas del jugador
         """
@@ -179,14 +179,23 @@ class Player:
         """
         Retroceso tras recibir daño
         """
-        if source:
+        if source and level_data and tile_size:
+            # Dirección del retroceso
             dx = self.x - source.x
             dy = self.y - source.y
 
+            offset = 50  # Distancia de retroceso
+            new_x, new_y = self.x, self.y
+
             if abs(dx) > abs(dy):
-                self.x += 50 if dx > 0 else -50
+                new_x += offset if dx > 0 else -offset
             else:
-                self.y += 50 if dy > 0 else -50
+                new_y += offset if dy > 0 else -offset
+
+            # Verificar si la nueva posición es walkable
+            future_rect = self.get_rect().move(new_x - self.x, new_y - self.y)
+            if is_tile_walkable(level_data, future_rect, tile_size):
+                self.x, self.y = new_x, new_y
 
 
     def recharge_water(self, water_stations, keys, recharge_rate=20, dt=1, interaction_dist=100):

@@ -125,7 +125,7 @@ async def main():
         # Actualizar lógica del jugador
         player.update(dt, keys, level_data, 16 * SPRITE_SCALE, water_stations)
         player.interact_with_fire(fires, keys)
-        player.handle_collision(fires, dt)
+        player.handle_collision(fires, dt, level_data, 16 * SPRITE_SCALE)
         player.recharge_water(water_stations, keys, dt=dt)
 
         # Actualizar lógica de los fuegos
@@ -138,6 +138,9 @@ async def main():
         draw_tiles(screen, level_data["level"], tiles_spritesheet, 16, SPRITE_SCALE)
         draw_elements(screen, level_data["elements"], element_sprites)
 
+        # Dibujar jugador
+        player.draw(screen)
+
         # Dibujar fuegos
         for fire in fires:
             fire.draw(screen)
@@ -145,9 +148,6 @@ async def main():
         # Dibujar hidrantes
         for water_station in water_stations:
             water_station.draw(screen)
-
-        # Dibujar jugador
-        player.draw(screen)
 
         # Dibujar HUD del jugador
         player.draw_hud(screen)
