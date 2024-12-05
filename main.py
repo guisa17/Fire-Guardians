@@ -1,53 +1,8 @@
 import pygame
 import asyncio
-from src.game.player import Player
-from src.game.fire import Fire
-from src.game.animals import Bear, Monkey, Bird
-from src.game.water_station import WaterStation
-from src.game.powerup import WaterRefillPowerUp, ExtraLifePowerUp, SpeedBoostPowerUp, ShieldPowerUp
-from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
-from src.core.utils import generate_random_fire
-
-
-def initialize_game_objects():
-    """
-    Inicializa los objetos principales del juego.
-    """
-    player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-
-    animals = [
-        Bear(300, 300),
-        Monkey(300, 200),
-        Bird(300, 100),
-    ]
-
-    water_station = WaterStation(100, 100)
-
-    powerups = [
-        WaterRefillPowerUp(100, 200),
-        ExtraLifePowerUp(100, 300),
-        SpeedBoostPowerUp(100, 400),
-        ShieldPowerUp(100, 500),
-    ]
-
-    num_fires = 5
-    fire_width = 16 * SPRITE_SCALE
-    fire_height = 16 * SPRITE_SCALE
-    player_position = (player.x, player.y)
-    min_distance = 100
-    min_fire_distance = 50
-
-    fire_positions = generate_random_fire(
-        num_fires,
-        fire_width,
-        fire_height,
-        player_position=player_position,
-        min_distance=min_distance,
-        min_fire_distance=min_fire_distance,
-    )
-    fires = [Fire(x, y) for x, y in fire_positions]
-
-    return player, animals, water_station, powerups, fires
+from src.states.game_play import GamePlay
+from src.game.levels import LEVELS
+from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 
 
 async def main():
@@ -59,80 +14,45 @@ async def main():
 
     # Configurar pantalla y reloj
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Fire Guardians - Prueba del Jugador")
+    pygame.display.set_caption("Fire Guardians")
     clock = pygame.time.Clock()
 
-    # Inicializar objetos del juego
-    player, animals, water_station, powerups, fires = initialize_game_objects()
-    max_fires = 10
+    # Variables de control del juego
+    current_level = 1  # Iniciar desde el nivel 1
     running = True
 
-    # Configuración del temporizador
-    font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 4))
-    time_left = 61  # Temporizador en segundos
-
-    # Bucle principal
     while running:
-        # Delta time
-        dt = clock.tick(FPS) / 1000
+        # Configurar el nivel actual
+        game_play = GamePlay(current_level)
+        game_play.setup_level()
 
-        # Manejar eventos
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-        
-        # Actualizar el temporizador
-        time_left -= dt
-        if time_left < 0:
-            time_left = 0
+        # Bucle del nivel
+        while game_play.running:
+            # Delta time
+            dt = clock.tick(FPS) / 1000
 
-        # Obtener teclas presionadas
-        keys = pygame.key.get_pressed()
+            # Manejar eventos
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    game_play.running = False
 
-        # Actualizar lógica del juego
-        player.update(dt, keys, water_station, animals)
-        player.interact_with_fire(fires, keys)
-        player.handle_collision(fires, dt)
-        player.recharge_water(water_station, keys, dt=dt)
+            # Actualizar lógica del nivel
+            game_play.update(dt)
 
-        for fire in fires:
-            fire.update(dt)
-            fire.update_spread(dt, fires, max_fires, player)
+            # Dibujar en pantalla
+            game_play.draw(screen)
 
-        for animal in animals:
-            animal.update(dt)
+            # Actualizar pantalla
+            pygame.display.flip()
 
-        player.interact_with_animals(animals, keys)
+            await asyncio.sleep(0)
 
-        for powerup in powerups:
-            player.interact_with_powerups(powerups)
-
-        # Dibujar elementos en pantalla
-        screen.fill((34, 139, 34))  # Fondo verde
-        water_station.draw(screen)
-        player.draw(screen)
-        player.draw_hud(screen)
-
-        for fire in fires:
-            fire.draw(screen)
-
-        for animal in animals:
-            animal.draw(screen)
-
-        for powerup in powerups:
-            powerup.draw(screen)
-        
-        # Dibujar temporizador en la esquina superior derecha
-        timer_text = f"{int(time_left):02d}s"
-        timer_surface = font.render(timer_text, True, (255, 255, 255))  # Blanco
-        timer_x = SCREEN_WIDTH - timer_surface.get_width() - 10
-        timer_y = 10
-        screen.blit(timer_surface, (timer_x, timer_y))
-
-        # Actualizar pantalla
-        pygame.display.flip()
-
-        await asyncio.sleep(0)
+        # Si el tiempo se acabó, pasar al siguiente nivel o terminar el juego
+        if game_play.player.time_left <= 0:
+            current_level += 1
+            if current_level > len(LEVELS):
+                running = False  # No hay más niveles, terminar el juego
 
     # Finalizar Pygame
     pygame.quit()

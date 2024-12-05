@@ -9,6 +9,7 @@ import pygame
 import random
 from src.core.utils import load_image
 from src.core.settings import SPRITE_SCALE
+from src.game.level_loader import is_tile_walkable
 
 
 class Fire:
@@ -19,6 +20,7 @@ class Fire:
         self.x = x
         self.y = y
         self.intensity = 100    # vida del fuego
+        self.has_interacted = False
 
         self.current_frame = 0
         self.animation_timer = 0
@@ -84,22 +86,26 @@ class Fire:
         Reducimos la intensidad del fuego con la interacción del jugador
         """
         if self.is_active:
+            self.has_interacted = True
             self.intensity -= amount
             if self.intensity <= 0:
                 self.is_active = False  # se apaga
 
 
-    def spread(self, fire_list, max_fires, player, min_fire_distance=50):
+    def spread(self, fire_list, max_fires, player, hydrants, level_data, tile_size, min_fire_distance=60):
         """
         Propaga el fuego si no se apaga a tiempo
         """
         if len(fire_list) >= max_fires:
             return
         
+        hydrant_positions = {(hydrant.x, hydrant.y) for hydrant in hydrants}
         spread_attempts = 5
+
         for _ in range(spread_attempts):
             new_x = self.x + random.randint(-self.spread_radius, self.spread_radius)
             new_y = self.y + random.randint(-self.spread_radius, self.spread_radius)
+            new_fire = Fire(new_x, new_y)
 
             player_dist_x = abs(new_x - player.x)
             player_dist_y = abs(new_y - player.y)
@@ -120,12 +126,21 @@ class Fire:
             if close_to_fires:
                 continue
 
-            new_fire = Fire(new_x, new_y)
+            # Verificar que no se propague sobre un hidrante
+            collides_with_hydrant = any(new_fire.get_rect().colliderect(hydrant.get_rect()) for hydrant in hydrants)
+            if collides_with_hydrant:
+                continue
+
+            # Verificar que el nuevo fuego esté sobre un tile "walkable"
+            fire_rect = new_fire.get_rect()
+            if not is_tile_walkable(level_data, fire_rect, tile_size):
+                continue
+
             fire_list.append(new_fire)
             break
 
     
-    def update_spread(self, dt, fire_list, max_fires, player):
+    def update_spread(self, dt, fire_list, max_fires, player, hydrants, level_data, tile_size):
         """
         Actualizar temporizador de propagación
         """
@@ -135,7 +150,7 @@ class Fire:
         self.spread_timer += dt
         if self.spread_timer >= self.time_to_spread:
             self.spread_timer = 0
-            self.spread(fire_list, max_fires, player)
+            self.spread(fire_list, max_fires, player, hydrants, level_data, tile_size)
 
     
     def update(self, dt):
@@ -159,12 +174,11 @@ class Fire:
             screen.blit(self.frames[self.current_frame], (self.x, self.y))
 
             # Barra de vida
-            bar_width = 32 * SPRITE_SCALE // 6
-            bar_height = 6
-            progress = self.intensity / 100
-            pygame.draw.rect(screen, (255, 0, 0), (self.x + 32, self.y - 10, bar_width, bar_height))
-            pygame.draw.rect(screen, (0, 255, 0), (self.x + 32, self.y - 10, bar_width * progress, bar_height))
+            if self.has_interacted:
+                bar_width = 32 * SPRITE_SCALE // 6
+                bar_height = 6
+                progress = self.intensity / 100
+                pygame.draw.rect(screen, (188, 51, 74), (self.x + 16, self.y - 10, bar_width, bar_height))
+                pygame.draw.rect(screen, (242, 188, 82), (self.x + 16, self.y - 10, bar_width * progress, bar_height))
 
-            self.draw_collision_box(screen)
-
-    
+            # self.draw_collision_box(screen)

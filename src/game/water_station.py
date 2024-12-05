@@ -41,4 +41,4 @@ class WaterStation:
         Dibujar hidrante en pantalla
         """
         screen.blit(self.sprite, (self.x, self.y))
-        self.draw_collision_box(screen)
+        # self.draw_collision_box(screen)

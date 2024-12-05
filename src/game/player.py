@@ -8,7 +8,8 @@ Controles del jugador
 
 import pygame
 from src.core.utils import load_image
-from src.core.settings import PLAYER_SPEED, PLAYER_INITIAL_WATER, SPRITE_SCALE
+from src.core.settings import PLAYER_SPEED, PLAYER_INITIAL_WATER, SPRITE_SCALE, SCREEN_HEIGHT, SCREEN_WIDTH
+from src.game.level_loader import load_level, is_tile_walkable
 
 
 class Player:
@@ -35,6 +36,9 @@ class Player:
         self.blink_state = True
 
         self.powerup_timer = 0
+        
+        self.time_left = 61
+        self.total_time = 61
 
         self.space_press_count = 0      # interacciones con spacebar
 
@@ -43,6 +47,8 @@ class Player:
         """
         self.idle_sprites = self.load_spritesheet("player/idle.png", 4, 3)
         self.run_sprites = self.load_spritesheet("player/run.png", 8, 3)
+        self.clock_icon = load_image("hud/clock.png")
+        self.clock_icon = pygame.transform.scale(self.clock_icon, (11 * (SPRITE_SCALE), 11 * (SPRITE_SCALE)))
 
     
     def load_spritesheet(self, path, cols, rows):
@@ -113,7 +119,7 @@ class Player:
         pygame.draw.rect(screen, (255, 0, 0), collision_rect, 1)
 
 
-    def handle_collision(self, fires, dt):
+    def handle_collision(self, fires, dt, level_data, tile_size):
         """
         Manejo de colisiones con el fuego
         """
@@ -128,8 +134,8 @@ class Player:
                 collided = True
                 self.collision_timer += dt
                 
-                if self.collision_timer >= 0.5:     # damage timer
-                    self.take_damage(1, fire)
+                if self.collision_timer >= 0.3:     # damage timer
+                    self.take_damage(1, fire, level_data, tile_size)
                     self.invulnerable_timer = 1
                     self.collision_timer = 0
                     break
@@ -144,7 +150,7 @@ class Player:
         return abs(cx1 - cx2) < interaction_dist and abs(cy1 - cy2) < interaction_dist
 
 
-    def interact_with_fire(self, fires, keys, interaction_dist=100):
+    def interact_with_fire(self, fires, keys, interaction_dist=60):
         """
         Interactuar con fuego
         """
@@ -161,7 +167,7 @@ class Player:
             self.space_press_count = 0
 
 
-    def take_damage(self, amount=1, source=None):
+    def take_damage(self, amount=1, source=None, level_data=None, tile_size=None):
         """
         Reduce la cantidad de vidas del jugador
         """
@@ -173,28 +179,38 @@ class Player:
         """
         Retroceso tras recibir daño
         """
-        if source:
+        if source and level_data and tile_size:
+            # Dirección del retroceso
             dx = self.x - source.x
             dy = self.y - source.y
 
+            offset = 50  # Distancia de retroceso
+            new_x, new_y = self.x, self.y
+
             if abs(dx) > abs(dy):
-                self.x += 50 if dx > 0 else -50
+                new_x += offset if dx > 0 else -offset
             else:
-                self.y += 50 if dy > 0 else -50
+                new_y += offset if dy > 0 else -offset
+
+            # Verificar si la nueva posición es walkable
+            future_rect = self.get_rect().move(new_x - self.x, new_y - self.y)
+            if is_tile_walkable(level_data, future_rect, tile_size):
+                self.x, self.y = new_x, new_y
 
 
-    def recharge_water(self, water_station, keys, recharge_rate=20, dt=1, interaction_dist=100):
+    def recharge_water(self, water_stations, keys, recharge_rate=20, dt=1, interaction_dist=60):
         """
         Recargar agua con "R" presionado
         """
         if keys[pygame.K_r]:
-            right_dist = self.is_within_distance(self.get_rect(), water_station.get_rect(), interaction_dist)
+            for station in water_stations:
+                right_dist = self.is_within_distance(self.get_rect(), station.get_rect(), interaction_dist)
 
-            if right_dist:
-                if self.water < PLAYER_INITIAL_WATER:
-                    self.water += recharge_rate * dt
-                    if self.water > PLAYER_INITIAL_WATER:
-                        self.water = PLAYER_INITIAL_WATER
+                if right_dist:
+                    if self.water < PLAYER_INITIAL_WATER:
+                        self.water += recharge_rate * dt
+                        if self.water > PLAYER_INITIAL_WATER:
+                            self.water = PLAYER_INITIAL_WATER
     
 
     def interact_with_powerups(self, powerups):
@@ -233,7 +249,7 @@ class Player:
         return dx, dy
 
 
-    def update(self, dt, keys, water_station, animals):
+    def update(self, dt, keys, level_data, tile_size, water_stations=None, animals=None):
         """
         Actualizar estado del jugador
         """
@@ -270,15 +286,32 @@ class Player:
             dy *= diagonal_scale
         
         # Prevenir colisiones con la estación de agua
-        future_rect = self.get_rect().move(dx, dy)
-        if future_rect.colliderect(water_station.get_rect()):
-            dx, dy = 0, 0
+        for station in water_stations:
+            if station is not None:
+                future_rect = self.get_rect().move(dx, dy)
+                if future_rect.colliderect(station.get_rect()):
+                    dx, dy = 0, 0
         
         # Colisión con los animales
-        dx, dy = self.handle_animal_collision(animals, dx, dy)
+        if animals is not None:
+            dx, dy = self.handle_animal_collision(animals, dx, dy)
 
-        self.x += dx
-        self.y += dy
+        # Rectángulo de colisión actual
+        current_rect = self.get_rect()
+
+        # Verificar movimiento horizontal
+        future_rect_x = current_rect.move(dx, 0)  # Solo mover horizontalmente
+        if is_tile_walkable(level_data, future_rect_x, tile_size):
+            self.x += dx
+        else:
+            dx = 0
+
+        # Verificar movimiento vertical
+        future_rect_y = current_rect.move(0, dy)  # Solo mover verticalmente
+        if is_tile_walkable(level_data, future_rect_y, tile_size):
+            self.y += dy
+        else:
+            dy = 0
 
         # Animación
         self.animation_timer += dt
@@ -319,7 +352,7 @@ class Player:
 
         screen.blit(sprite, (self.x, self.y))
 
-        self.draw_collision_box(screen)
+        # self.draw_collision_box(screen)
 
 
     def draw_hud(self, screen):
@@ -327,17 +360,19 @@ class Player:
         Dibuja el HUD con las barras de vida y agua.
         """
         # Coordenadas iniciales y tamaños
-        icon_size = 7 * SPRITE_SCALE  # Tamaño del ícono con escala
-        bar_width = 35 * SPRITE_SCALE
-        bar_height = 5 * SPRITE_SCALE
-        bar_inner_width = 33 * SPRITE_SCALE
-        bar_inner_height = 3 * SPRITE_SCALE
+        icon_size = 7 * (SPRITE_SCALE + 1)  # Tamaño del ícono con escala
+        bar_width = 35 * (SPRITE_SCALE + 1)
+        bar_height = 5 * (SPRITE_SCALE + 1)
+        bar_inner_width = 33 * (SPRITE_SCALE + 1)
+        bar_inner_height = 3 * (SPRITE_SCALE + 1)
+        time_bar_width = bar_width * 4
 
         # Colores
         border_color = (0, 0, 0)
         empty_color = (69, 61, 69)
         life_color = (237, 28, 36)
         water_color = (112, 154, 209)
+        time_color = (147, 177, 38) if self.time_left >= 10 else (188, 51, 74)
 
         # Cargar íconos
         heart_icon = load_image("hud/heart.png")
@@ -349,6 +384,8 @@ class Player:
         # Coordenadas del HUD
         hud_x = 10
         hud_y = 10
+        hud_time_icon_x = SCREEN_WIDTH - (icon_size + 10)
+        hud_time_bar_x = hud_time_icon_x - (time_bar_width + 15)
 
         # Dibujar barra de vida
         screen.blit(heart_icon, (hud_x, hud_y))
@@ -382,6 +419,22 @@ class Player:
             border_color
         )
 
+        # Dibujar barra de tiempo
+        screen.blit(self.clock_icon, (hud_time_icon_x, hud_y - 5))
+        self.draw_progress_bar(
+            screen,
+            hud_time_bar_x,
+            hud_y + (icon_size - bar_height) // 2,
+            time_bar_width,
+            bar_height,
+            time_bar_width - 2 * SPRITE_SCALE,
+            bar_inner_height,
+            self.time_left / self.total_time,
+            time_color,
+            empty_color,
+            border_color
+        )
+
 
     def draw_progress_bar(self, screen, x, y, bar_width, bar_height, inner_width, inner_height, progress, fill_color, empty_color, border_color):
         # Dibujar borde negro de la barra
@@ -400,3 +453,4 @@ class Player:
             fill_color,
             (x + 1 * SPRITE_SCALE, y + 1 * SPRITE_SCALE, int(inner_width * progress), inner_height)
         )
+
