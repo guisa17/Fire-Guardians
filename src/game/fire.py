@@ -89,17 +89,20 @@ class Fire:
                 self.is_active = False  # se apaga
 
 
-    def spread(self, fire_list, max_fires, player, min_fire_distance=50):
+    def spread(self, fire_list, max_fires, player, hydrants, min_fire_distance=50):
         """
         Propaga el fuego si no se apaga a tiempo
         """
         if len(fire_list) >= max_fires:
             return
         
+        hydrant_positions = {(hydrant.x, hydrant.y) for hydrant in hydrants}
         spread_attempts = 5
+
         for _ in range(spread_attempts):
             new_x = self.x + random.randint(-self.spread_radius, self.spread_radius)
             new_y = self.y + random.randint(-self.spread_radius, self.spread_radius)
+            new_fire = Fire(new_x, new_y)
 
             player_dist_x = abs(new_x - player.x)
             player_dist_y = abs(new_y - player.y)
@@ -120,12 +123,16 @@ class Fire:
             if close_to_fires:
                 continue
 
-            new_fire = Fire(new_x, new_y)
+            # Verificar que no se propague sobre un hidrante
+            collides_with_hydrant = any(new_fire.get_rect().colliderect(hydrant.get_rect()) for hydrant in hydrants)
+            if collides_with_hydrant:
+                continue
+
             fire_list.append(new_fire)
             break
 
     
-    def update_spread(self, dt, fire_list, max_fires, player):
+    def update_spread(self, dt, fire_list, max_fires, player, hydrants):
         """
         Actualizar temporizador de propagación
         """
@@ -135,7 +142,7 @@ class Fire:
         self.spread_timer += dt
         if self.spread_timer >= self.time_to_spread:
             self.spread_timer = 0
-            self.spread(fire_list, max_fires, player)
+            self.spread(fire_list, max_fires, player, hydrants)
 
     
     def update(self, dt):

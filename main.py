@@ -30,15 +30,21 @@ def load_element_sprites():
     }
 
 
-def create_random_fires(level_data, num_fires, tile_size):
+def create_random_fires(level_data, num_fires, tile_size, water_stations):
     """
     Crea fuegos en posiciones aleatorias dentro del nivel.
     """
     fires = []
+    hydrant_positions = {(ws.x // tile_size, ws.y // tile_size) for ws in water_stations}
+
     for _ in range(num_fires):
         while True:
             col = random.randint(0, len(level_data["level"][0]) - 1)
             row = random.randint(0, len(level_data["level"]) - 1)
+
+            if (col, row) in hydrant_positions:
+                continue
+
             x = col * tile_size
             y = row * tile_size
             fire_rect = pygame.Rect(x, y, tile_size, tile_size)
@@ -85,16 +91,17 @@ async def main():
     # Inicializar jugador en la posición inicial del nivel
     player = initialize_player(level_data)
 
-    # Crear fuegos aleatorios
-    fires = create_random_fires(level_data, num_fires=5, tile_size=16 * SPRITE_SCALE)
-
     # Inicializar hidrantes desde el nivel
     water_stations = initialize_water_stations(level_data)
+
+    # Crear fuegos aleatorios
+    fires = create_random_fires(level_data, num_fires=5, tile_size=16 * SPRITE_SCALE, water_stations=water_stations)
 
     # Configuración del temporizador
     font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 4))
     time_left = 61  # Temporizador en segundos
 
+    max_fires = 10
     running = True
 
     # Bucle principal
@@ -124,6 +131,7 @@ async def main():
         # Actualizar lógica de los fuegos
         for fire in fires:
             fire.update(dt)
+            fire.update_spread(dt, fires, max_fires, player, water_stations)
 
         # Dibujar nivel
         screen.fill((0, 0, 0))  # Fondo negro
