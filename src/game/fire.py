@@ -9,6 +9,7 @@ import pygame
 import random
 from src.core.utils import load_image
 from src.core.settings import SPRITE_SCALE
+from src.game.level_loader import is_tile_walkable
 
 
 class Fire:
@@ -89,7 +90,7 @@ class Fire:
                 self.is_active = False  # se apaga
 
 
-    def spread(self, fire_list, max_fires, player, hydrants, min_fire_distance=50):
+    def spread(self, fire_list, max_fires, player, hydrants, level_data, tile_size, min_fire_distance=50):
         """
         Propaga el fuego si no se apaga a tiempo
         """
@@ -128,11 +129,16 @@ class Fire:
             if collides_with_hydrant:
                 continue
 
+            # Verificar que el nuevo fuego esté sobre un tile "walkable"
+            fire_rect = new_fire.get_rect()
+            if not is_tile_walkable(level_data, fire_rect, tile_size):
+                continue
+
             fire_list.append(new_fire)
             break
 
     
-    def update_spread(self, dt, fire_list, max_fires, player, hydrants):
+    def update_spread(self, dt, fire_list, max_fires, player, hydrants, level_data, tile_size):
         """
         Actualizar temporizador de propagación
         """
@@ -142,7 +148,7 @@ class Fire:
         self.spread_timer += dt
         if self.spread_timer >= self.time_to_spread:
             self.spread_timer = 0
-            self.spread(fire_list, max_fires, player, hydrants)
+            self.spread(fire_list, max_fires, player, hydrants, level_data, tile_size)
 
     
     def update(self, dt):

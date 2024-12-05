@@ -131,7 +131,7 @@ async def main():
         # Actualizar lógica de los fuegos
         for fire in fires:
             fire.update(dt)
-            fire.update_spread(dt, fires, max_fires, player, water_stations)
+            fire.update_spread(dt, fires, max_fires, player, water_stations, level_data, 16 * SPRITE_SCALE)
 
         # Dibujar nivel
         screen.fill((0, 0, 0))  # Fondo negro
@@ -151,9 +151,6 @@ async def main():
 
         # Dibujar HUD del jugador
         player.draw_hud(screen)
-
-        # Dibujar temporizador en la esquina superior derecha
-        # todo
 
         # Actualizar pantalla
         pygame.display.flip()
