@@ -181,4 +181,4 @@ class Fire:
                 pygame.draw.rect(screen, (188, 51, 74), (self.x + 16, self.y - 10, bar_width, bar_height))
                 pygame.draw.rect(screen, (242, 188, 82), (self.x + 16, self.y - 10, bar_width * progress, bar_height))
 
-            self.draw_collision_box(screen)
+            # self.draw_collision_box(screen)

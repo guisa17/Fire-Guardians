@@ -198,7 +198,7 @@ class Player:
                 self.x, self.y = new_x, new_y
 
 
-    def recharge_water(self, water_stations, keys, recharge_rate=20, dt=1, interaction_dist=75):
+    def recharge_water(self, water_stations, keys, recharge_rate=20, dt=1, interaction_dist=60):
         """
         Recargar agua con "R" presionado
         """
@@ -352,7 +352,7 @@ class Player:
 
         screen.blit(sprite, (self.x, self.y))
 
-        self.draw_collision_box(screen)
+        # self.draw_collision_box(screen)
 
 
     def draw_hud(self, screen):
