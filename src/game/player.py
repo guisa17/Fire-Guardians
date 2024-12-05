@@ -184,18 +184,19 @@ class Player:
                 self.y += 50 if dy > 0 else -50
 
 
-    def recharge_water(self, water_station, keys, recharge_rate=20, dt=1, interaction_dist=100):
+    def recharge_water(self, water_stations, keys, recharge_rate=20, dt=1, interaction_dist=100):
         """
         Recargar agua con "R" presionado
         """
         if keys[pygame.K_r]:
-            right_dist = self.is_within_distance(self.get_rect(), water_station.get_rect(), interaction_dist)
+            for station in water_stations:
+                right_dist = self.is_within_distance(self.get_rect(), station.get_rect(), interaction_dist)
 
-            if right_dist:
-                if self.water < PLAYER_INITIAL_WATER:
-                    self.water += recharge_rate * dt
-                    if self.water > PLAYER_INITIAL_WATER:
-                        self.water = PLAYER_INITIAL_WATER
+                if right_dist:
+                    if self.water < PLAYER_INITIAL_WATER:
+                        self.water += recharge_rate * dt
+                        if self.water > PLAYER_INITIAL_WATER:
+                            self.water = PLAYER_INITIAL_WATER
     
 
     def interact_with_powerups(self, powerups):
@@ -234,7 +235,7 @@ class Player:
         return dx, dy
 
 
-    def update(self, dt, keys, level_data, tile_size, water_station=None, animals=None):
+    def update(self, dt, keys, level_data, tile_size, water_stations=None, animals=None):
         """
         Actualizar estado del jugador
         """
@@ -271,10 +272,11 @@ class Player:
             dy *= diagonal_scale
         
         # Prevenir colisiones con la estación de agua
-        if water_station is not None:
-            future_rect = self.get_rect().move(dx, dy)
-            if future_rect.colliderect(water_station.get_rect()):
-                dx, dy = 0, 0
+        for station in water_stations:
+            if station is not None:
+                future_rect = self.get_rect().move(dx, dy)
+                if future_rect.colliderect(station.get_rect()):
+                    dx, dy = 0, 0
         
         # Colisión con los animales
         if animals is not None:

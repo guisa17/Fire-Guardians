@@ -162,7 +162,10 @@ def main():
                         player_start["y"] = y
                         selecting_player_start = False
                     elif selected_element:
-                        elements.append({"type": selected_element, "x": x, "y": y})
+                        # Alinear los elementos al tile
+                        grid_x = (x // TILE_SIZE) * TILE_SIZE
+                        grid_y = (y // TILE_SIZE) * TILE_SIZE
+                        elements.append({"type": selected_element, "x": grid_x, "y": grid_y})
                     else:
                         grid_x = x // TILE_SIZE
                         grid_y = y // TILE_SIZE

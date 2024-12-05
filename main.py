@@ -3,6 +3,7 @@ import asyncio
 import random
 from src.game.player import Player
 from src.game.fire import Fire
+from src.game.water_station import WaterStation
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, SPRITE_SCALE
 from src.game.level_loader import load_level, draw_tiles, draw_elements, is_tile_walkable
 
@@ -49,6 +50,16 @@ def create_random_fires(level_data, num_fires, tile_size):
     return fires
 
 
+def initialize_water_stations(level_data):
+    """
+    Crea los hidrantes basados en los elementos del nivel.
+    """
+    water_stations = []
+    for element in level_data["elements"]:
+        if element["type"] == "hydrant":
+            water_stations.append(WaterStation(element["x"], element["y"]))
+    return water_stations
+
 
 async def main():
     """
@@ -77,6 +88,9 @@ async def main():
     # Crear fuegos aleatorios
     fires = create_random_fires(level_data, num_fires=5, tile_size=16 * SPRITE_SCALE)
 
+    # Inicializar hidrantes desde el nivel
+    water_stations = initialize_water_stations(level_data)
+
     # Configuración del temporizador
     font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 4))
     time_left = 61  # Temporizador en segundos
@@ -102,10 +116,10 @@ async def main():
         keys = pygame.key.get_pressed()
 
         # Actualizar lógica del jugador
-        player.update(dt, keys, level_data, 16 * SPRITE_SCALE)
+        player.update(dt, keys, level_data, 16 * SPRITE_SCALE, water_stations)
         player.interact_with_fire(fires, keys)
         player.handle_collision(fires, dt)
-        # player.recharge_water()
+        player.recharge_water(water_stations, keys, dt=dt)
 
         # Actualizar lógica de los fuegos
         for fire in fires:
@@ -120,6 +134,9 @@ async def main():
         for fire in fires:
             fire.draw(screen)
         
+        # Dibujar hidrantes
+        for water_station in water_stations:
+            water_station.draw(screen)
 
         # Dibujar jugador
         player.draw(screen)
