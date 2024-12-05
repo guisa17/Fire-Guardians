@@ -30,30 +30,32 @@ def load_element_sprites():
     }
 
 
-def create_random_fires(level_data, num_fires, tile_size, water_stations):
+def create_random_fire(level_data, tile_size, water_stations, fires):
     """
-    Crea fuegos en posiciones aleatorias dentro del nivel.
+    Crea un fuego en una posición aleatoria válida.
     """
-    fires = []
     hydrant_positions = {(ws.x // tile_size, ws.y // tile_size) for ws in water_stations}
 
-    for _ in range(num_fires):
-        while True:
-            col = random.randint(0, len(level_data["level"][0]) - 1)
-            row = random.randint(0, len(level_data["level"]) - 1)
+    for _ in range(10):  # Intentar encontrar una posición válida hasta 10 veces
+        col = random.randint(0, len(level_data["level"][0]) - 1)
+        row = random.randint(0, len(level_data["level"]) - 1)
 
-            if (col, row) in hydrant_positions:
-                continue
+        if (col, row) in hydrant_positions:
+            continue
 
-            x = col * tile_size
-            y = row * tile_size
-            fire_rect = pygame.Rect(x, y, tile_size, tile_size)
+        x = col * tile_size
+        y = row * tile_size
+        fire_rect = pygame.Rect(x, y, tile_size, tile_size)
 
-            # Solo colocar fuego en tiles "walkable"
-            if is_tile_walkable(level_data, fire_rect, tile_size):
-                fires.append(Fire(x, y))
-                break
-    return fires
+        # Solo colocar fuego en tiles "walkable" y lejos de otros fuegos
+        if is_tile_walkable(level_data, fire_rect, tile_size):
+            for fire in fires:
+                if fire.get_rect().colliderect(fire_rect):
+                    break
+            else:
+                return Fire(x, y)  # Retorna un nuevo fuego válido
+
+    return None  # No encontró una posición válida
 
 
 def initialize_water_stations(level_data):
@@ -94,14 +96,21 @@ async def main():
     # Inicializar hidrantes desde el nivel
     water_stations = initialize_water_stations(level_data)
 
-    # Crear fuegos aleatorios
-    fires = create_random_fires(level_data, num_fires=5, tile_size=16 * SPRITE_SCALE, water_stations=water_stations)
+    # Lista de fuegos
+    fires = []
 
-    # Configuración del temporizador
-    # font = pygame.font.Font("assets/fonts/ascii-sector-16x16-tileset.ttf", 16 * (SPRITE_SCALE - 1))
-    # time_left = 61  # Temporizador en segundos
+    # Configuración de aparición de fuegos
+    fire_spawn_timer = 0
+    fire_spawn_interval = 3  # Cada 3 segundos se intentan generar nuevos fuegos
+    max_active_fires = 2  # Comienza con 2 fuegos activos
+    max_spread_fire = 5
 
-    max_fires = 10
+    # Generar los fuegos iniciales
+    for _ in range(max_active_fires):
+        new_fire = create_random_fire(level_data, 16 * SPRITE_SCALE, water_stations, fires)
+        if new_fire:
+            fires.append(new_fire)
+
     running = True
 
     # Bucle principal
@@ -114,10 +123,27 @@ async def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Actualizar el temporizador
+        # Actualizar el temporizador de aparición de fuegos
+        fire_spawn_timer += dt
+        if fire_spawn_timer >= fire_spawn_interval:
+            fire_spawn_timer = 0
+
+            # Incrementar el límite de fuegos activos
+            if max_active_fires < 10:
+                max_active_fires += 1
+
+            # Generar nuevos fuegos si no se ha alcanzado el límite
+            fires_to_spawn = max_active_fires - len(fires)
+            for _ in range(fires_to_spawn):
+                new_fire = create_random_fire(level_data, 16 * SPRITE_SCALE, water_stations, fires)
+                if new_fire:
+                    fires.append(new_fire)
+
+        # Actualizar el temporizador del jugador
         player.time_left -= dt
         if player.time_left < 0:
             player.time_left = 0
+            running = False  # Finaliza el juego cuando el tiempo llega a cero
 
         # Obtener teclas presionadas
         keys = pygame.key.get_pressed()
@@ -131,12 +157,16 @@ async def main():
         # Actualizar lógica de los fuegos
         for fire in fires:
             fire.update(dt)
-            fire.update_spread(dt, fires, max_fires, player, water_stations, level_data, 16 * SPRITE_SCALE)
+            fire.update_spread(dt, fires, max_spread_fire, player, water_stations, level_data, 16 * SPRITE_SCALE)
 
         # Dibujar nivel
         screen.fill((0, 0, 0))  # Fondo negro
         draw_tiles(screen, level_data["level"], tiles_spritesheet, 16, SPRITE_SCALE)
         draw_elements(screen, level_data["elements"], element_sprites)
+
+        # Dibujar hidrantes
+        for water_station in water_stations:
+            water_station.draw(screen)
 
         # Dibujar jugador
         player.draw(screen)
@@ -144,10 +174,6 @@ async def main():
         # Dibujar fuegos
         for fire in fires:
             fire.draw(screen)
-        
-        # Dibujar hidrantes
-        for water_station in water_stations:
-            water_station.draw(screen)
 
         # Dibujar HUD del jugador
         player.draw_hud(screen)
