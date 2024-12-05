@@ -36,6 +36,7 @@ class GamePlay:
         self.player = self.initialize_player()
         self.total_time = self.time_limit
         self.remaining_time = self.total_time
+        self.animation_timer = 0
 
         # Generar fuegos iniciales
         for _ in range(self.max_active_fires):
@@ -106,6 +107,8 @@ class GamePlay:
         self.remaining_time -= dt
         if self.remaining_time <= 0:
             self.on_game_over()
+        
+        self.animation_timer += dt
 
         # Manejo del temporizador para aparición de fuegos
         self.fire_spawn_timer += dt
@@ -140,7 +143,7 @@ class GamePlay:
         """
         # Dibujar el nivel
         self.screen.fill((0, 0, 0))
-        draw_tiles(self.screen, self.level_data["level"], self.tiles_spritesheet, 16, SPRITE_SCALE)
+        draw_tiles(self.screen, self.level_data["level"], self.tiles_spritesheet, 16, SPRITE_SCALE, self.animation_timer)
         draw_elements(self.screen, self.level_data["elements"], self.element_sprites)
 
         # Dibujar fuegos

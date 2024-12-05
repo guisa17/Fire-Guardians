@@ -40,15 +40,21 @@ def is_tile_walkable(level_data, rect, tile_size):
     return True
 
 
-def draw_tiles(screen, tiles, spritesheet, tile_size, scale):
+def draw_tiles(screen, tiles, spritesheet, tile_size, scale, animation_timer):
     """
     Dibuja los tiles del nivel en la pantalla.
     """
     scaled_tile_size = tile_size * scale
+
+    tree_frame = 5 if int(animation_timer * 2) % 2 == 0 else 6
+
     for row_idx, row in enumerate(tiles):
         for col_idx, tile_id in enumerate(row):
             if tile_id < 0:  # Saltar tiles vacíos (por ejemplo, -1)
                 continue
+
+            if tile_id == 5:
+                tile_id = tree_frame
 
             # Calcular posición y recortar el tile del spritesheet
             x = col_idx * scaled_tile_size
