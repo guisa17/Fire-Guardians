@@ -31,6 +31,7 @@ class Animal:
         self.is_active = True
         self.is_rescued = False
         self.has_been_rescued = False
+        self.counted_as_rescued = False
         self.spawn_time = spawn_time
 
         # Animación de salvado

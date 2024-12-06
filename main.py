@@ -32,6 +32,7 @@ class MainGame:
             level_config=level_config,
             on_game_over=self.trigger_game_over,
             on_level_complete=self.next_level,
+            level_index=self.level_index
         )
 
     def trigger_game_over(self):
