@@ -161,7 +161,7 @@ class Player:
                     if self.water > 0:
                         if self.space_press_count < 1:
                             self.space_press_count += 1
-                            fire.extinguish(15)
+                            fire.extinguish(10)
                             self.water -= 3     # diminuye agua !
         else:
             self.space_press_count = 0
@@ -222,7 +222,7 @@ class Player:
                 powerup.apply_effect(self)
 
 
-    def interact_with_animals(self, animals, keys, interaction_dist=100):
+    def interact_with_animals(self, animals, keys, interaction_dist=60):
         """
         Interactúa con los animales para rescatarlos
         """

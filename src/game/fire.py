@@ -27,7 +27,7 @@ class Fire:
         self.frame_duration = 0.2
         self.is_active = True
 
-        self.time_to_spread = 5
+        self.time_to_spread = 3
         self.spread_timer = 0
         self.spread_radius = 50
 
