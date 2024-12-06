@@ -3,6 +3,7 @@ import asyncio
 from src.states.game_play import GamePlay
 from src.game.levels import LEVELS
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from src.states.main_menu import MainMenu
 
 
 async def main():
@@ -20,7 +21,37 @@ async def main():
     # Variables de control del juego
     current_level = 1  # Iniciar desde el nivel 1
     running = True
+    runningmenu = True
+    
+    # Crear el menú principal
+    main_menu = MainMenu(screen)
 
+    # Bucle del menú principal
+    while runningmenu:
+        # Delta time
+        dt = clock.tick(FPS) / 1000
+
+        # Manejar eventos
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                runningmenu = False
+            elif main_menu.handle_input(pygame.key.get_pressed()) == "start_game":
+                runningmenu = False  # Salir del menú y comenzar el juego
+                break
+            elif main_menu.handle_input(pygame.key.get_pressed()) == "instructions":
+                print("Ir a instrucciones")  # Implementa las instrucciones si lo deseas
+            elif main_menu.handle_input(pygame.key.get_pressed()) == "credits":
+                print("Ir a créditos")  # Implementa los créditos si lo deseas
+
+        # Actualizar el menú
+        main_menu.update(dt)
+
+        # Dibujar el menú
+        main_menu.draw()
+
+        # Actualizar pantalla
+        pygame.display.flip()
+    
     while running:
         # Configurar el nivel actual
         game_play = GamePlay(current_level)
