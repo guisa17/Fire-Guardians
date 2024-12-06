@@ -25,6 +25,11 @@ class GamePlay:
         self.on_game_over = on_game_over
         self.on_level_complete = on_level_complete
         self.level_index = level_index
+        
+        self.special_mode_triggered = False
+        self.special_extinguish_mode = False
+        self.special_presses = 0
+        self.is_last_level = (self.level_index == 4)
 
         # Inicializar datos del nivel
         self.level_data = load_level(self.level_file)
@@ -194,6 +199,16 @@ class GamePlay:
         return None
 
 
+    def special_fire_extinguish(self, keys):
+        if keys[pygame.K_f] and keys[pygame.K_j]:
+            self.special_presses += 1
+            # Cada 10 presiones reducimos intensidad de todos los fuegos en 5
+            if self.special_presses % 10 == 0:
+                for fire in self.fires:
+                    if fire.is_active:
+                        fire.extinguish(5)
+
+
     def update(self, dt, keys):
         """
         Actualiza la lógica del juego.
@@ -218,7 +233,14 @@ class GamePlay:
         
         # Actualizar la lógica del jugador
         self.player.update(dt, keys, self.level_data, 16 * SPRITE_SCALE, self.water_stations, self.animals)
-        self.player.interact_with_fire(self.fires, keys)
+
+        # Si estamos modo especial
+        if self.special_extinguish_mode:
+            self.special_fire_extinguish(keys)
+        else:
+            self.player.interact_with_fire(self.fires, keys)
+
+        # self.player.interact_with_fire(self.fires, keys)
         self.player.interact_with_animals(self.animals, keys)
         self.player.handle_collision(self.fires, dt, self.level_data, 16 * SPRITE_SCALE)
         self.player.recharge_water(self.water_stations, keys, dt=dt)
@@ -233,6 +255,30 @@ class GamePlay:
         
         # Tiempo transcurrido
         elapsed_time = self.total_time - self.remaining_time
+
+        # Último nivel
+        if self.is_last_level and not self.special_mode_triggered:
+            # and elapsed_time >= 80:
+            no_animals_left = (len(self.animals) == 0)
+
+            # No hay powerups de agua en pantalla
+            no_water_powerups = True
+            for p in self.powerups:
+                if isinstance(p, WaterRefillPowerUp) and p.is_active:
+                    no_water_powerups = False
+                    break
+            
+            if elapsed_time >= 80 and no_animals_left and no_water_powerups:
+                self.special_mode_triggered = True
+                self.special_extinguish_mode = True
+
+                self.player.water = 0
+
+                # Generar más fuego
+                for _ in range(25):
+                    new_fire = self.create_random_fire()
+                    if new_fire:
+                        self.fires.append(new_fire)
 
         # Aparición de animales según spawn_time
         for animal in self.animals:
