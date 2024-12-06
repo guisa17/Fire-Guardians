@@ -201,13 +201,13 @@ class GamePlay:
         for water_station in self.water_stations:
             water_station.draw(self.screen)
 
-        # Dibujar animales
-        for animal in self.animals:
-            animal.draw(self.screen)
-        
         # Dibujar fuegos
         for fire in self.fires:
             fire.draw(self.screen)
+
+        # Dibujar animales
+        for animal in self.animals:
+            animal.draw(self.screen)
 
         # Dibujar jugador y su HUD
         self.player.draw(self.screen)
