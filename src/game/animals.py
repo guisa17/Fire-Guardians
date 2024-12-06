@@ -9,10 +9,11 @@ Animales Rescatables
 import pygame
 from src.core.utils import load_image
 from src.core.settings import SPRITE_SCALE
+from src.game.powerup import ShieldPowerUp, WaterRefillPowerUp, SpeedBoostPowerUp
 
 
 class Animal:
-    def __init__(self, x, y, life, sprite_path, frame_count, sprite_size, spawn_time=0):
+    def __init__(self, x, y, life, sprite_path, frame_count, sprite_size, spawn_time=0, powerup_class=None):
         """
         Inicialización base para los animales.
         """
@@ -37,6 +38,10 @@ class Animal:
         self.heart_timer = 0
         self.heart_duration = 1
         self.show_heart = False
+
+        # Drop de powerup
+        self.notify_powerup = False
+        self.powerup_class = powerup_class
 
 
     def load_spritesheet(self, path, frame_count, sprite_size):
@@ -96,7 +101,7 @@ class Animal:
                 self.show_heart = False
                 self.is_rescued = False
                 self.has_been_rescued = True
-        
+                                
 
     def draw(self, screen):
         """
@@ -121,14 +126,14 @@ class Animal:
 
 class Bear(Animal):
     def __init__(self, x, y, spawn_time=0):
-        super().__init__(x, y, 200, "animals/bear.png", 4, (20, 20), spawn_time)
+        super().__init__(x, y, 200, "animals/bear.png", 4, (20, 20), spawn_time, ShieldPowerUp)
 
 
 class Monkey(Animal):
     def __init__(self, x, y, spawn_time=0):
-        super().__init__(x, y, 150, "animals/monkey.png", 4, (16, 16), spawn_time)
+        super().__init__(x, y, 150, "animals/monkey.png", 4, (16, 16), spawn_time, SpeedBoostPowerUp)
 
 
 class Bird(Animal):
     def __init__(self, x, y, spawn_time=0):
-        super().__init__(x, y, 150, "animals/bird.png", 4, (14, 14), spawn_time)
+        super().__init__(x, y, 150, "animals/bird.png", 4, (14, 14), spawn_time, WaterRefillPowerUp)

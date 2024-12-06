@@ -6,6 +6,7 @@ from src.game.water_station import WaterStation
 from src.game.level_loader import load_level, draw_tiles, draw_elements, is_tile_walkable
 from src.core.settings import SPRITE_SCALE
 from src.game.animals import Bear, Monkey, Bird
+from src.game.powerup import ShieldPowerUp, WaterRefillPowerUp, SpeedBoostPowerUp
 
 
 class GamePlay:
@@ -43,12 +44,15 @@ class GamePlay:
         # Inicializar animales
         self.animals = self.initialize_animals(level_config.get("animals", []))
 
+        # Inicializar powerups
+        self.powerups = []
+
         # Generar fuegos iniciales
         for _ in range(self.min_active_fires):
             new_fire = self.create_random_fire()
             if new_fire:
                 self.fires.append(new_fire)
-
+        
 
     def load_element_sprites(self):
         """
@@ -159,6 +163,9 @@ class GamePlay:
         self.player.interact_with_animals(self.animals, keys)
         self.player.handle_collision(self.fires, dt, self.level_data, 16 * SPRITE_SCALE)
         self.player.recharge_water(self.water_stations, keys, dt=dt)
+        
+        # Interactuar con powerups
+        self.player.interact_with_powerups(self.powerups)
 
         # Actualizar la lógica de los fuegos
         for fire in self.fires:
@@ -168,20 +175,31 @@ class GamePlay:
         # Tiempo transcurrido
         elapsed_time = self.total_time - self.remaining_time
 
+        # Aparición de animales según spawn_time
         for animal in self.animals:
             if (not animal.is_active
                 and not animal.is_rescued
                 and not animal.has_been_rescued
                 and elapsed_time >= animal.spawn_time):
                 animal.is_active = True
-
+        
         # Actualizamos los animales
         for animal in self.animals:
             animal.update(dt)
         
+        # Generar powerup si animal fue rescatado
+        for animal in self.animals:
+            if animal.has_been_rescued and animal.powerup_class and not animal.notify_powerup:
+                new_powerup = animal.powerup_class(animal.x, animal.y)
+                self.powerups.append(new_powerup)
+                animal.notify_powerup = True
+        
         # Filtrar animales rescatados
         self.animals = [animal for animal in self.animals
                         if not (not animal.is_active and not animal.is_rescued and animal.has_been_rescued)]
+        
+        # Filtrar power-ups recolectados
+        self.powerups = [powerup for powerup in self.powerups if powerup.is_active]
 
         # Verificar si el nivel ha sido completado
         if len(self.fires) == 0:
@@ -209,6 +227,12 @@ class GamePlay:
         for animal in self.animals:
             animal.draw(self.screen)
 
-        # Dibujar jugador y su HUD
+        # Dibuja los powerups
+        for powerup in self.powerups:
+            powerup.draw(self.screen)
+
+        # Dibujar jugador
         self.player.draw(self.screen)
+
+        # Dibujar el HUD
         self.player.draw_hud(self.screen, self.total_time, self.remaining_time)
