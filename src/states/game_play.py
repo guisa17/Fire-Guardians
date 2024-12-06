@@ -199,11 +199,11 @@ class GamePlay:
         # Dibujar animales
         for animal in self.animals:
             animal.draw(self.screen)
+        
+        # Dibujar fuegos
+        for fire in self.fires:
+            fire.draw(self.screen)
 
         # Dibujar jugador y su HUD
         self.player.draw(self.screen)
         self.player.draw_hud(self.screen, self.total_time, self.remaining_time)
-
-        # Dibujar fuegos
-        for fire in self.fires:
-            fire.draw(self.screen)

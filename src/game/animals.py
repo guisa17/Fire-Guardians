@@ -89,11 +89,11 @@ class Animal:
             screen.blit(self.frames[self.current_frame], (self.x, self.y))
 
             # Barra de progreso para el rescate
-            bar_width = self.sprite_width * SPRITE_SCALE // 3
+            bar_width = self.sprite_width * SPRITE_SCALE // 2
             bar_height = 6
             progress = self.life / self.max_life
-            pygame.draw.rect(screen, (255, 0, 0), (self.x + self.sprite_width, self.y - 10, bar_width, bar_height))
-            pygame.draw.rect(screen, (0, 255, 0), (self.x + self.sprite_width, self.y - 10, bar_width * progress, bar_height))
+            pygame.draw.rect(screen, (147, 177, 38), (self.x + self.sprite_width - 8, self.y - 10, bar_width, bar_height))
+            pygame.draw.rect(screen, (120, 44, 115), (self.x + self.sprite_width - 8, self.y - 10, bar_width * progress, bar_height))
 
 
 class Bear(Animal):
