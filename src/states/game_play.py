@@ -85,18 +85,17 @@ class GamePlay:
         animals = []
         for animal_info in animal_data:
             x, y = animal_info["x"], animal_info["y"]
-            spawn_time = animal_info["spawn_time"]
+            spawn_time = animal_info.get("spawn_time", 0)
             
             if animal_info["type"] == "bear":
-                animal = Bear(x, y)
+                animal = Bear(x, y, spawn_time)
             elif animal_info["type"] == "monkey":
-                animal = Monkey(x, y)
+                animal = Monkey(x, y, spawn_time)
             elif animal_info["type"] == "bird":
-                animal = Bird(x, y)
+                animal = Bird(x, y, spawn_time)
             else:
                 continue
 
-            animal.spawn_time = spawn_time
             animal.is_active = False
             animals.append(animal)
 
@@ -160,7 +159,7 @@ class GamePlay:
                 animal.is_active = True
 
         # Actualizar la lógica del jugador
-        self.player.update(dt, keys, self.level_data, 16 * SPRITE_SCALE, self.water_stations)
+        self.player.update(dt, keys, self.level_data, 16 * SPRITE_SCALE, self.water_stations, self.animals)
         self.player.interact_with_fire(self.fires, keys)
         self.player.interact_with_animals(self.animals, keys)
         self.player.handle_collision(self.fires, dt, self.level_data, 16 * SPRITE_SCALE)
@@ -171,8 +170,9 @@ class GamePlay:
             fire.update(dt)
             fire.update_spread(dt, self.fires, self.max_spread_fire, self.player, self.water_stations, self.level_data, 16 * SPRITE_SCALE)
 
-        # Actualizar y eliminar animales rescatados
-        # self.animals = [animal for animal in self.animals if animal.is_active]
+        # Filtrar animales rescatados
+        self.animals = [animal for animal in self.animals
+                        if animal.is_active or self.total_time - self.remaining_time < animal.spawn_time]
 
         # Actualizar la lógica de los animales
         for animal in self.animals:
