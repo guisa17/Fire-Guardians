@@ -115,7 +115,9 @@ class GamePlay:
 
             animal.is_active = False
             animals.append(animal)
-
+        
+        self.total_animals = len(animals)
+        self.rescued_animals_count = 0
         return animals
 
 
@@ -244,6 +246,12 @@ class GamePlay:
                 self.powerups.append(new_powerup)
                 animal.notify_powerup = True
         
+        # Contar animales rescatados
+        for animal in self.animals:
+            if animal.has_been_rescued and animal.counted_as_rescued == False:
+                animal.counted_as_rescued = True
+                self.rescued_animals_count += 1
+
         # Verificar power-ups temporizados
         for tp in self.timed_powerups:
             if not tp["spawned"] and elapsed_time >= tp["time"]:
@@ -260,8 +268,12 @@ class GamePlay:
         # Filtrar power-ups recolectados
         self.powerups = [powerup for powerup in self.powerups if powerup.is_active]
 
+        # Verificar todos los fuegos apagados
+        all_fires_out = all(not fire.is_active for fire in self.fires)
+        all_animals_rescued = (self.rescued_animals_count == self.total_animals)
+
         # Verificar si el nivel ha sido completado
-        if len(self.fires) == 0:
+        if all_fires_out and all_animals_rescued and self.remaining_time > 0:
             self.on_level_complete()
 
 

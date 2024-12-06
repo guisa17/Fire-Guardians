@@ -24,7 +24,7 @@ TILE_COUNT = tileset.get_width() // TILE_SIZE
 icons = {
     "hydrant": pygame.image.load("assets/images/hydrant/hydrant.png"),
     "powerup_life": pygame.image.load("assets/images/powerups/extra_heart.png"),
-    "powerup_water": pygame.image.load("assets/images/powerups/canteen.png"),
+    "powerup_water": pygame.image.load("assets/images/powerups/water_bucket.png"),
 }
 for key in icons:
     icons[key] = pygame.transform.scale(icons[key], (TILE_SIZE, TILE_SIZE))
