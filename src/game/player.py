@@ -161,7 +161,7 @@ class Player:
                     if self.water > 0:
                         if self.space_press_count < 1:
                             self.space_press_count += 1
-                            fire.extinguish(15)
+                            fire.extinguish(10)
                             self.water -= 3     # diminuye agua !
         else:
             self.space_press_count = 0
@@ -222,7 +222,7 @@ class Player:
                 powerup.apply_effect(self)
 
 
-    def interact_with_animals(self, animals, keys, interaction_dist=100):
+    def interact_with_animals(self, animals, keys, interaction_dist=60):
         """
         Interactúa con los animales para rescatarlos
         """
@@ -231,11 +231,8 @@ class Player:
                 player_cx, player_cy = self.get_rect().center
                 animal_cx, animal_cy = animal.get_rect().center
 
-                distance_x = abs(player_cx - animal_cx)
-                distance_y = abs(player_cy - animal_cy)
-
-                if distance_x < interaction_dist and distance_y < interaction_dist:
-                    if keys[pygame.K_z] and keys[pygame.K_x]:  # ambas teclas
+                if abs(player_cx - animal_cx) < interaction_dist and abs(player_cy - animal_cy) < interaction_dist:
+                    if keys[pygame.K_z] and keys[pygame.K_x]:  # Ambas teclas para rescatar
                         animal.rescue(3)
 
 
@@ -355,7 +352,7 @@ class Player:
         # self.draw_collision_box(screen)
 
 
-    def draw_hud(self, screen):
+    def draw_hud(self, screen, total_time, remaining_time):
         """
         Dibuja el HUD con las barras de vida y agua.
         """
@@ -372,7 +369,7 @@ class Player:
         empty_color = (69, 61, 69)
         life_color = (237, 28, 36)
         water_color = (112, 154, 209)
-        time_color = (147, 177, 38) if self.time_left >= 10 else (188, 51, 74)
+        time_color = (147, 177, 38) if remaining_time >= 10 else (188, 51, 74)
 
         # Cargar íconos
         heart_icon = load_image("hud/heart.png")
@@ -429,7 +426,7 @@ class Player:
             bar_height,
             time_bar_width - 2 * SPRITE_SCALE,
             bar_inner_height,
-            self.time_left / self.total_time,
+            remaining_time / total_time,
             time_color,
             empty_color,
             border_color

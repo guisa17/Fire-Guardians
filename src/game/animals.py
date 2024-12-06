@@ -12,7 +12,7 @@ from src.core.settings import SPRITE_SCALE
 
 
 class Animal:
-    def __init__(self, x, y, life, sprite_path, frame_count, sprite_size):
+    def __init__(self, x, y, life, sprite_path, frame_count, sprite_size, spawn_time=0):
         """
         Inicialización base para los animales.
         """
@@ -20,7 +20,6 @@ class Animal:
         self.y = y
         self.life = life
         self.max_life = life
-        self.is_rescued = False
 
         self.current_frame = 0
         self.animation_timer = 0
@@ -29,6 +28,7 @@ class Animal:
 
         self.sprite_width, self.sprite_height = sprite_size
         self.is_active = True
+        self.spawn_time = spawn_time
 
 
     def load_spritesheet(self, path, frame_count, sprite_size):
@@ -67,6 +67,7 @@ class Animal:
             if self.life <= 0:
                 self.life = 0
                 self.is_active = False
+                print(f"rescued and is_active {self.is_active} at ({self.x, self.y})")
 
 
     def update(self, dt):
@@ -96,15 +97,15 @@ class Animal:
 
 
 class Bear(Animal):
-    def __init__(self, x, y):
-        super().__init__(x, y, 200, "animals/bear.png", 4, (20, 20))
+    def __init__(self, x, y, spawn_time=0):
+        super().__init__(x, y, 200, "animals/bear.png", 4, (20, 20), spawn_time)
 
 
 class Monkey(Animal):
-    def __init__(self, x, y):
-        super().__init__(x, y, 150, "animals/monkey.png", 4, (16, 16))
+    def __init__(self, x, y, spawn_time=0):
+        super().__init__(x, y, 150, "animals/monkey.png", 4, (16, 16), spawn_time)
 
 
 class Bird(Animal):
-    def __init__(self, x, y):
-        super().__init__(x, y, 150, "animals/bird.png", 4, (14, 14))
+    def __init__(self, x, y, spawn_time=0):
+        super().__init__(x, y, 150, "animals/bird.png", 4, (14, 14), spawn_time)
