@@ -19,8 +19,8 @@ class PowerUp:
         """
         self.x = x
         self.y = y
-        self.width = 16 * (SPRITE_SCALE - 1)
-        self.height = 16 * (SPRITE_SCALE - 1)
+        self.width = 16 * (SPRITE_SCALE)
+        self.height = 16 * (SPRITE_SCALE)
         self.sprite = load_image(image_path)
         self.sprite = pygame.transform.scale(self.sprite, (self.width, self.height))
         self.is_active = True  # power-up está disponible
@@ -77,7 +77,7 @@ class ExtraLifePowerUp(PowerUp):
 
 class SpeedBoostPowerUp(PowerUp):
     def __init__(self, x, y):
-        super().__init__(x, y, "powerups/leaves.png")
+        super().__init__(x, y, "powerups/coffee.png")
         self.duration = POWERUP_DURATION
 
     def apply_effect(self, player):

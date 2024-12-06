@@ -9,10 +9,11 @@ Animales Rescatables
 import pygame
 from src.core.utils import load_image
 from src.core.settings import SPRITE_SCALE
+from src.game.powerup import ShieldPowerUp, WaterRefillPowerUp, SpeedBoostPowerUp
 
 
 class Animal:
-    def __init__(self, x, y, life, sprite_path, frame_count, sprite_size, spawn_time=0):
+    def __init__(self, x, y, life, sprite_path, frame_count, sprite_size, spawn_time=0, powerup_class=None):
         """
         Inicialización base para los animales.
         """
@@ -28,7 +29,19 @@ class Animal:
 
         self.sprite_width, self.sprite_height = sprite_size
         self.is_active = True
+        self.is_rescued = False
+        self.has_been_rescued = False
         self.spawn_time = spawn_time
+
+        # Animación de salvado
+        self.heart_frames = self.load_spritesheet("animals/saved.png", 3, (16, 16))
+        self.heart_timer = 0
+        self.heart_duration = 1
+        self.show_heart = False
+
+        # Drop de powerup
+        self.notify_powerup = False
+        self.powerup_class = powerup_class
 
 
     def load_spritesheet(self, path, frame_count, sprite_size):
@@ -67,7 +80,9 @@ class Animal:
             if self.life <= 0:
                 self.life = 0
                 self.is_active = False
-                print(f"rescued and is_active {self.is_active} at ({self.x, self.y})")
+                self.is_rescued = True
+                self.show_heart = True
+                self.heart_timer = 0
 
 
     def update(self, dt):
@@ -79,33 +94,46 @@ class Animal:
             if self.animation_timer >= self.frame_duration:
                 self.animation_timer = 0
                 self.current_frame = (self.current_frame + 1) % len(self.frames)
-
+        
+        if self.show_heart and self.is_rescued:
+            self.heart_timer += dt
+            if self.heart_timer >= self.heart_duration:
+                self.show_heart = False
+                self.is_rescued = False
+                self.has_been_rescued = True
+                                
 
     def draw(self, screen):
         """
         Dibuja el animal en pantalla.
         """
-        if self.is_active:
+        if self.show_heart and self.is_rescued:
+            heart_frame = int((self.heart_timer / self.heart_duration) * len(self.heart_frames))
+            heart_frame = min(heart_frame, len(self.heart_frames) - 1)
+            heart_sprite = self.heart_frames[heart_frame]
+            screen.blit(heart_sprite, (self.x, self.y - 20))
+        
+        elif self.is_active:
             screen.blit(self.frames[self.current_frame], (self.x, self.y))
 
             # Barra de progreso para el rescate
-            bar_width = self.sprite_width * SPRITE_SCALE // 3
+            bar_width = self.sprite_width * SPRITE_SCALE // 2
             bar_height = 6
             progress = self.life / self.max_life
-            pygame.draw.rect(screen, (255, 0, 0), (self.x + self.sprite_width, self.y - 10, bar_width, bar_height))
-            pygame.draw.rect(screen, (0, 255, 0), (self.x + self.sprite_width, self.y - 10, bar_width * progress, bar_height))
+            pygame.draw.rect(screen, (147, 177, 38), (self.x + self.sprite_width - 8, self.y - 10, bar_width, bar_height))
+            pygame.draw.rect(screen, (120, 44, 115), (self.x + self.sprite_width - 8, self.y - 10, bar_width * progress, bar_height))
 
 
 class Bear(Animal):
     def __init__(self, x, y, spawn_time=0):
-        super().__init__(x, y, 200, "animals/bear.png", 4, (20, 20), spawn_time)
+        super().__init__(x, y, 200, "animals/bear.png", 4, (20, 20), spawn_time, ShieldPowerUp)
 
 
 class Monkey(Animal):
     def __init__(self, x, y, spawn_time=0):
-        super().__init__(x, y, 150, "animals/monkey.png", 4, (16, 16), spawn_time)
+        super().__init__(x, y, 150, "animals/monkey.png", 4, (16, 16), spawn_time, SpeedBoostPowerUp)
 
 
 class Bird(Animal):
     def __init__(self, x, y, spawn_time=0):
-        super().__init__(x, y, 150, "animals/bird.png", 4, (14, 14), spawn_time)
+        super().__init__(x, y, 150, "animals/bird.png", 4, (14, 14), spawn_time, WaterRefillPowerUp)

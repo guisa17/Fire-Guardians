@@ -26,6 +26,7 @@ class Fire:
         self.animation_timer = 0
         self.frame_duration = 0.2
         self.is_active = True
+        self.is_extinguished = False
 
         self.time_to_spread = 3
         self.spread_timer = 0
@@ -35,6 +36,9 @@ class Fire:
         Carga de sprites
         """
         self.frames = self.load_spritesheet("fire/fire.png", 4)
+        self.extinguished_sprite = pygame.transform.scale(
+            load_image("fire/extinguished.png"), (16 * SPRITE_SCALE, 16 * SPRITE_SCALE)
+        )
 
     
     def load_spritesheet(self, path, frame_count):
@@ -90,6 +94,7 @@ class Fire:
             self.intensity -= amount
             if self.intensity <= 0:
                 self.is_active = False  # se apaga
+                self.is_extinguished = True
 
 
     def spread(self, fire_list, max_fires, player, hydrants, level_data, tile_size, min_fire_distance=60):
@@ -180,5 +185,8 @@ class Fire:
                 progress = self.intensity / 100
                 pygame.draw.rect(screen, (188, 51, 74), (self.x + 16, self.y - 10, bar_width, bar_height))
                 pygame.draw.rect(screen, (242, 188, 82), (self.x + 16, self.y - 10, bar_width * progress, bar_height))
+
+        elif self.is_extinguished:
+            screen.blit(self.extinguished_sprite, (self.x, self.y))
 
             # self.draw_collision_box(screen)
