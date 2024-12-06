@@ -85,7 +85,7 @@ LEVELS = [
         "max_active_fires": 20,             # max fuegos activos
         "max_spread_fire": 10,              # max fuegos por spread
         "fire_intensity": 140,
-        "time_limit": 120,
+        "time_limit": 150,
         "animals": [
             {"type": "bird", "x": 636, "y": 240, "spawn_time": 10},
             {"type": "bear", "x": 282, "y": 282, "spawn_time": 20},

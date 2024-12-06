@@ -13,7 +13,7 @@ class MainGame:
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Fire Guardians")
-        self.level_index = 0
+        self.level_index = 4
         self.running = True
         self.state = None
 

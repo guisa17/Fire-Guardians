@@ -7,6 +7,8 @@ from src.game.level_loader import load_level, draw_tiles, draw_elements, is_tile
 from src.core.settings import SPRITE_SCALE
 from src.game.animals import Bear, Monkey, Bird
 from src.game.powerup import ShieldPowerUp, WaterRefillPowerUp, SpeedBoostPowerUp, ExtraLifePowerUp
+from src.core.utils import load_image
+from src.game.levels import LEVELS
 
 
 class GamePlay:
@@ -37,6 +39,24 @@ class GamePlay:
         # Cargar spritesheet de tiles
         self.tiles_spritesheet = pygame.image.load("assets/images/tiles/tiles.png").convert_alpha()
         self.element_sprites = self.load_element_sprites()
+
+        # Carga de la imagen de FJ_keys
+        self.fj_keys_image = load_image("keys/FJ_keys.png")
+
+        # Extraer los frames
+        fj_frame_width = 16
+        fj_frame_height = 16
+        self.fj_keys_frames = []
+
+        for i in range(2):
+            frame = self.fj_keys_image.subsurface(pygame.Rect(i * fj_frame_width, 0, fj_frame_width, fj_frame_height))
+            frame = pygame.transform.scale(frame, (fj_frame_width * SPRITE_SCALE, fj_frame_height * SPRITE_SCALE))
+            self.fj_keys_frames.append(frame)
+
+        self.fj_keys_index = 0
+        self.fj_keys_timer = 0
+        self.fj_keys_frame_duration = 0.5
+        self.fj_show_keys = True
 
         # Inicializar entidades del nivel
         self.fires = []
@@ -200,13 +220,17 @@ class GamePlay:
 
 
     def special_fire_extinguish(self, keys):
+        if self.fj_show_keys:
+            if keys[pygame.K_f] and keys[pygame.K_j]:
+                self.fj_show_keys = False
+
         if keys[pygame.K_f] and keys[pygame.K_j]:
-            self.special_presses += 1
-            # Cada 10 presiones reducimos intensidad de todos los fuegos en 5
-            if self.special_presses % 10 == 0:
-                for fire in self.fires:
-                    if fire.is_active:
-                        fire.extinguish(5)
+                self.special_presses += 1
+                # Cada 10 presiones reducimos intensidad de todos los fuegos en 5
+                if self.special_presses % 10 == 0:
+                    for fire in self.fires:
+                        if fire.is_active:
+                            fire.extinguish(5)
 
 
     def update(self, dt, keys):
@@ -258,20 +282,17 @@ class GamePlay:
 
         # Último nivel
         if self.is_last_level and not self.special_mode_triggered:
-            # and elapsed_time >= 80:
             no_animals_left = (len(self.animals) == 0)
-
-            # No hay powerups de agua en pantalla
             no_water_powerups = True
+
             for p in self.powerups:
                 if isinstance(p, WaterRefillPowerUp) and p.is_active:
                     no_water_powerups = False
                     break
             
-            if elapsed_time >= 80 and no_animals_left and no_water_powerups:
+            if elapsed_time >= 100 and no_animals_left and no_water_powerups:
                 self.special_mode_triggered = True
                 self.special_extinguish_mode = True
-
                 self.player.water = 0
 
                 # Generar más fuego
@@ -329,6 +350,13 @@ class GamePlay:
         if all_fires_out and all_animals_rescued and self.remaining_time > 0:
             self.on_level_complete()
 
+        # Animar teclas FJ si se muestran
+        if self.special_extinguish_mode and self.fj_show_keys:
+            self.fj_keys_timer += dt
+            if self.fj_keys_timer >= self.fj_keys_frame_duration:
+                self.fj_keys_timer = 0
+                self.fj_keys_index = (self.fj_keys_index + 1) % len(self.fj_keys_frames)
+
 
     def draw(self):
         """
@@ -360,3 +388,12 @@ class GamePlay:
 
         # Dibujar el HUD
         self.player.draw_hud(self.screen, self.total_time, self.remaining_time)
+
+        # Dibujar las teclas FJ sobre el jugador si está en modo especial y si se muestran
+        if self.special_extinguish_mode and self.fj_show_keys:
+            key_sprite = self.fj_keys_frames[self.fj_keys_index]
+            key_width, key_height = key_sprite.get_size()
+            x_pos = self.player.x
+            y_pos = self.player.y - key_height - 10
+            self.screen.blit(key_sprite, (x_pos, y_pos))
+            
