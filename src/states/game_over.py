@@ -1,14 +1,14 @@
 import pygame
 
-
 class GameOver:
     def __init__(self, screen):
         """
         Inicializa la pantalla de Game Over.
         """
         self.screen = screen
-        self.font_title = pygame.font.Font(None, 80)  # Fuente para el texto "Game Over"
-        self.font_option = pygame.font.Font(None, 50)  # Fuente para las opciones
+        # Cargar la fuente personalizada 'font.ttf'
+        self.font_title = pygame.font.Font('assets/fonts/font.ttf', 80)  # Fuente para el texto "Game Over"
+        self.font_option = pygame.font.Font('assets/fonts/font.ttf', 50)  # Fuente para las opciones
         self.selected_option = 0  # Índice de la opción seleccionada
         self.options = ["Intentar de nuevo", "Salir"]
         self.blink_timer = 0
@@ -38,12 +38,19 @@ class GameOver:
         for i, option in enumerate(self.options):
             color = (0, 255, 0) if i == self.selected_option else (255, 255, 255)  # Verde para la opción seleccionada
             bg_color = (50, 50, 50) if i == self.selected_option else (0, 0, 0)  # Fondo gris para la opción seleccionada
-            option_rect = pygame.Rect(self.screen.get_width() // 2 - 150, 300 + i * 80, 300, 60)
-            pygame.draw.rect(self.screen, bg_color, option_rect, border_radius=10)
-            pygame.draw.rect(self.screen, (255, 255, 255), option_rect, 2, border_radius=10)
+
+            # Calcular el tamaño del recuadro en función del tamaño del texto
+            option_text = self.font_option.render(option, True, color)
+            option_width, option_height = option_text.get_size()
+
+            # Crear un rectángulo ajustado al texto
+            option_rect = pygame.Rect(self.screen.get_width() // 2 - option_width // 2, 300 + i * 80, option_width + 20, option_height + 10)
+
+            # Dibujar el recuadro con bordes pixelados
+            pygame.draw.rect(self.screen, bg_color, option_rect, border_radius=5)  # Fondo del recuadro
+            pygame.draw.rect(self.screen, (255, 255, 255), option_rect, 2, border_radius=5)  # Borde blanco
 
             # Texto de la opción
-            option_text = self.font_option.render(option, True, color)
             text_rect = option_text.get_rect(center=option_rect.center)
             self.screen.blit(option_text, text_rect)
 
