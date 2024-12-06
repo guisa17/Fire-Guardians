@@ -77,7 +77,7 @@ class ExtraLifePowerUp(PowerUp):
 
 class SpeedBoostPowerUp(PowerUp):
     def __init__(self, x, y):
-        super().__init__(x, y, "powerups/leaves.png")
+        super().__init__(x, y, "powerups/coffee.png")
         self.duration = POWERUP_DURATION
 
     def apply_effect(self, player):
