@@ -5,6 +5,7 @@ from src.game.fire import Fire
 from src.game.water_station import WaterStation
 from src.game.level_loader import load_level, draw_tiles, draw_elements, is_tile_walkable
 from src.core.settings import SPRITE_SCALE
+from src.game.animals import Bear, Monkey, Bird
 
 
 class GamePlay:
@@ -38,6 +39,9 @@ class GamePlay:
         self.total_time = self.time_limit
         self.remaining_time = self.total_time
         self.animation_timer = 0
+
+        # Inicializar animales
+        self.animals = self.initialize_animals(level_config.get("animals", []))
 
         # Generar fuegos iniciales
         for _ in range(self.min_active_fires):
@@ -73,6 +77,31 @@ class GamePlay:
                 water_stations.append(WaterStation(element["x"], element["y"]))
         return water_stations
 
+
+    def initialize_animals(self, animal_data):
+        """
+        Crea instancias de animales basados en los datos del nivel
+        """
+        animals = []
+        for animal_info in animal_data:
+            x, y = animal_info["x"], animal_info["y"]
+            spawn_time = animal_info["spawn_time"]
+            
+            if animal_info["type"] == "bear":
+                animal = Bear(x, y)
+            elif animal_info["type"] == "monkey":
+                animal = Monkey(x, y)
+            elif animal_info["type"] == "bird":
+                animal = Bird(x, y)
+            else:
+                continue
+
+            animal.spawn_time = spawn_time
+            animal.is_active = False
+            animals.append(animal)
+
+        return animals
+        
 
     def create_random_fire(self):
         """
@@ -124,10 +153,16 @@ class GamePlay:
                 new_fire = self.create_random_fire()
                 if new_fire:
                     self.fires.append(new_fire)
+        
+        # Aparición de animales según spawn_time
+        for animal in self.animals:
+            if not animal.is_active and self.total_time - self.remaining_time >= animal.spawn_time:
+                animal.is_active = True
 
         # Actualizar la lógica del jugador
         self.player.update(dt, keys, self.level_data, 16 * SPRITE_SCALE, self.water_stations)
         self.player.interact_with_fire(self.fires, keys)
+        self.player.interact_with_animals(self.animals, keys)
         self.player.handle_collision(self.fires, dt, self.level_data, 16 * SPRITE_SCALE)
         self.player.recharge_water(self.water_stations, keys, dt=dt)
 
@@ -135,6 +170,13 @@ class GamePlay:
         for fire in self.fires:
             fire.update(dt)
             fire.update_spread(dt, self.fires, self.max_spread_fire, self.player, self.water_stations, self.level_data, 16 * SPRITE_SCALE)
+
+        # Actualizar y eliminar animales rescatados
+        # self.animals = [animal for animal in self.animals if animal.is_active]
+
+        # Actualizar la lógica de los animales
+        for animal in self.animals:
+            animal.update(dt)
 
         # Verificar si el nivel ha sido completado
         if len(self.fires) == 0:
@@ -153,6 +195,10 @@ class GamePlay:
         # Dibujar estaciones de agua
         for water_station in self.water_stations:
             water_station.draw(self.screen)
+
+        # Dibujar animales
+        for animal in self.animals:
+            animal.draw(self.screen)
 
         # Dibujar jugador y su HUD
         self.player.draw(self.screen)

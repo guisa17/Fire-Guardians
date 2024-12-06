@@ -67,6 +67,7 @@ class Animal:
             if self.life <= 0:
                 self.life = 0
                 self.is_active = False
+                print("rescued")
 
 
     def update(self, dt):
