@@ -4,6 +4,7 @@ from src.states.game_play import GamePlay
 from src.game.levels import LEVELS
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from src.states.main_menu import MainMenu
+from src.states.game_over import GameOver
 
 
 class MainGame:
