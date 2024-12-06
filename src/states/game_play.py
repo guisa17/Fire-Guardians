@@ -153,11 +153,6 @@ class GamePlay:
                 if new_fire:
                     self.fires.append(new_fire)
         
-        # Aparición de animales según spawn_time
-        for animal in self.animals:
-            if not animal.is_active and self.total_time - self.remaining_time >= animal.spawn_time:
-                animal.is_active = True
-
         # Actualizar la lógica del jugador
         self.player.update(dt, keys, self.level_data, 16 * SPRITE_SCALE, self.water_stations, self.animals)
         self.player.interact_with_fire(self.fires, keys)
@@ -169,14 +164,24 @@ class GamePlay:
         for fire in self.fires:
             fire.update(dt)
             fire.update_spread(dt, self.fires, self.max_spread_fire, self.player, self.water_stations, self.level_data, 16 * SPRITE_SCALE)
+        
+        # Tiempo transcurrido
+        elapsed_time = self.total_time - self.remaining_time
 
-        # Filtrar animales rescatados
-        self.animals = [animal for animal in self.animals
-                        if animal.is_active or self.total_time - self.remaining_time < animal.spawn_time]
+        for animal in self.animals:
+            if (not animal.is_active
+                and not animal.is_rescued
+                and not animal.has_been_rescued
+                and elapsed_time >= animal.spawn_time):
+                animal.is_active = True
 
-        # Actualizar la lógica de los animales
+        # Actualizamos los animales
         for animal in self.animals:
             animal.update(dt)
+        
+        # Filtrar animales rescatados
+        self.animals = [animal for animal in self.animals
+                        if not (not animal.is_active and not animal.is_rescued and animal.has_been_rescued)]
 
         # Verificar si el nivel ha sido completado
         if len(self.fires) == 0:

@@ -12,8 +12,8 @@ LEVELS = [
         "fire_intensity": 100,
         "time_limit": 60,
         "animals": [
-            {"type": "bear", "x": 282, "y": 282, "spawn_time": 10},
-            {"type": "monkey", "x": 636, "y": 512, "spawn_time": 25}
+            {"type": "bear", "x": 282, "y": 282, "spawn_time": 5},
+            {"type": "monkey", "x": 636, "y": 512, "spawn_time": 10}
         ]
     }
 ]
