@@ -6,88 +6,108 @@ from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from src.states.main_menu import MainMenu
 
 
-async def main():
-    """
-    Bucle principal del juego.
-    """
-    # Inicializar Pygame
-    pygame.init()
+class MainGame:
+    def __init__(self):
+        """
+        Inicializa la configuración principal del juego.
+        """
+        pygame.init()
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Fire Guardians")
+        self.level_index = 0
+        self.running = True
+        self.runningmenu = True
+        self.state = None
+        
+    def load_level(self):
+        """
+        Carga el nivel actual y pasa la configuración desde levels.py.
+        """
+        level_config = LEVELS[self.level_index]
+        self.state = GamePlay(
+            screen=self.screen,
+            level_config=level_config,
+            on_game_over=self.game_over,
+            on_level_complete=self.next_level,
+        )
 
-    # Configurar pantalla y reloj
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Fire Guardians")
-    clock = pygame.time.Clock()
+    def game_over(self):
+        """
+        Manejo del fin del juego.
+        """
+        print("Game over")
+        self.running = False
 
-    # Variables de control del juego
-    current_level = 1  # Iniciar desde el nivel 1
-    running = True
-    runningmenu = True
-    
-    # Crear el menú principal
-    main_menu = MainMenu(screen)
-
-    # Bucle del menú principal
-    while runningmenu:
-        # Delta time
-        dt = clock.tick(FPS) / 1000
-
-        # Manejar eventos
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                runningmenu = False
-            elif main_menu.handle_input(pygame.key.get_pressed()) == "start_game":
-                runningmenu = False  # Salir del menú y comenzar el juego
-                break
-            elif main_menu.handle_input(pygame.key.get_pressed()) == "instructions":
-                print("Ir a instrucciones")  # Implementa las instrucciones si lo deseas
-            elif main_menu.handle_input(pygame.key.get_pressed()) == "credits":
-                print("Ir a créditos")  # Implementa los créditos si lo deseas
-
-        # Actualizar el menú
-        main_menu.update(dt)
-
-        # Dibujar el menú
-        main_menu.draw()
-
-        # Actualizar pantalla
-        pygame.display.flip()
-    
-    while running:
-        # Configurar el nivel actual
-        game_play = GamePlay(current_level)
-        game_play.setup_level()
-
-        # Bucle del nivel
-        while game_play.running:
+    def next_level(self):
+        """
+        Manejo de la transición entre niveles.
+        """
+        self.level_index += 1
+        if self.level_index < len(LEVELS):
+            print(f"Loading level {self.level_index + 1}")
+            self.load_level()
+        else:
+            print("Congratulations! You completed all levels.")
+            self.running = False    
+        
+    async def run(self):
+        """
+        Bucle principal del juego.
+        """
+        self.load_level()
+        clock = pygame.time.Clock()
+        
+        # Crear el menú principal
+        main_menu = MainMenu(self.screen)
+        
+        # Bucle del menú principal
+        while self.runningmenu:
             # Delta time
             dt = clock.tick(FPS) / 1000
 
             # Manejar eventos
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
-                    game_play.running = False
+                    self.runningmenu = False
+                elif main_menu.handle_input(pygame.key.get_pressed()) == "start_game":
+                    self.runningmenu = False  # Salir del menú y comenzar el juego
+                    break
+                elif main_menu.handle_input(pygame.key.get_pressed()) == "instructions":
+                    print("Ir a instrucciones")  # Implementa las instrucciones si lo deseas
+                elif main_menu.handle_input(pygame.key.get_pressed()) == "credits":
+                    print("Ir a créditos")  # Implementa los créditos si lo deseas
 
-            # Actualizar lógica del nivel
-            game_play.update(dt)
+            # Actualizar el menú
+            main_menu.update(dt)
 
-            # Dibujar en pantalla
-            game_play.draw(screen)
+            # Dibujar el menú
+            main_menu.draw()
 
             # Actualizar pantalla
             pygame.display.flip()
+        
+        
+        while self.running:
+            # Procesar eventos
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
 
-            await asyncio.sleep(0)
+            # Delta time y actualización del juego
+            dt = clock.tick(60) / 1000  # Limitar a 60 FPS
+            keys = pygame.key.get_pressed()
 
-        # Si el tiempo se acabó, pasar al siguiente nivel o terminar el juego
-        if game_play.player.time_left <= 0:
-            current_level += 1
-            if current_level > len(LEVELS):
-                running = False  # No hay más niveles, terminar el juego
+            if self.state:
+                self.state.update(dt, keys)
+                self.state.draw()
+                pygame.display.flip()  # Actualizar pantalla
 
-    # Finalizar Pygame
-    pygame.quit()
+            await asyncio.sleep(0)  # Permitir otras tareas del sistema
+
+        pygame.quit()
+        
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    game = MainGame()
+    asyncio.run(game.run())
