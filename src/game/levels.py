@@ -14,7 +14,9 @@ LEVELS = [
         "animals": [
             {"type": "bear", "x": 282, "y": 282, "spawn_time": 5},
             {"type": "monkey", "x": 636, "y": 512, "spawn_time": 10}
+        ],
+        "timed_powerups": [
+            {"type": "ExtraLifePowerUp", "time": 15}
         ]
     }
 ]
-

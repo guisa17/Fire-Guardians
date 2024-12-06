@@ -6,7 +6,7 @@ from src.game.water_station import WaterStation
 from src.game.level_loader import load_level, draw_tiles, draw_elements, is_tile_walkable
 from src.core.settings import SPRITE_SCALE
 from src.game.animals import Bear, Monkey, Bird
-from src.game.powerup import ShieldPowerUp, WaterRefillPowerUp, SpeedBoostPowerUp
+from src.game.powerup import ShieldPowerUp, WaterRefillPowerUp, SpeedBoostPowerUp, ExtraLifePowerUp
 
 
 class GamePlay:
@@ -46,6 +46,19 @@ class GamePlay:
 
         # Inicializar powerups
         self.powerups = []
+
+        # Cargar configuración de powerups predeterminados
+        timed_powerups_data = level_config.get("timed_powerups", [])
+        self.timed_powerups = []
+        for tp_data in timed_powerups_data:
+            powerup_class = self.get_powerup_class(tp_data["type"])
+            
+            if powerup_class is not None:
+                self.timed_powerups.append({
+                    "powerup_class": powerup_class,
+                    "time": tp_data["time"],
+                    "spawned": False
+                })
 
         # Generar fuegos iniciales
         for _ in range(self.min_active_fires):
@@ -104,6 +117,19 @@ class GamePlay:
             animals.append(animal)
 
         return animals
+
+
+    def get_powerup_class(self, powerup_type):
+        """
+        Devolver clase correspondiente de powerup
+        """
+        mapping = {
+            "ExtraLifePowerUp": ExtraLifePowerUp,
+            "WaterRefillPowerUp": WaterRefillPowerUp,
+            "SpeedBoostPowerUp": SpeedBoostPowerUp,
+            "ShieldPowerUp": ShieldPowerUp
+        }
+        return mapping.get(powerup_type, None)
         
 
     def create_random_fire(self):
@@ -132,6 +158,30 @@ class GamePlay:
                 fire.intensity = self.fire_intensity
                 return Fire(x, y)
 
+        return None
+
+
+    def create_random_powerup(self, powerup_class):
+        """
+        Crea un powerup de una cierta clase en un posición aleatoria
+        """
+        tile_size = 16 * SPRITE_SCALE
+        hydrant_positions = {(ws.x // tile_size, ws.y // tile_size) for ws in self.water_stations}
+
+        for _ in range(50):
+            col = random.randint(0, len(self.level_data["level"][0]) - 1)
+            row = random.randint(0, len(self.level_data["level"]) - 1)
+
+            if (col, row) in hydrant_positions:
+                continue
+
+            x = col * tile_size
+            y = row * tile_size
+            rect = pygame.Rect(x, y, tile_size, tile_size)
+
+            if is_tile_walkable(self.level_data, rect, tile_size):
+                return powerup_class(x, y)
+        
         return None
 
 
@@ -194,6 +244,15 @@ class GamePlay:
                 self.powerups.append(new_powerup)
                 animal.notify_powerup = True
         
+        # Verificar power-ups temporizados
+        for tp in self.timed_powerups:
+            if not tp["spawned"] and elapsed_time >= tp["time"]:
+                # Crear power-up en una posición aleatoria válida
+                p_instance = self.create_random_powerup(tp["powerup_class"])
+                if p_instance:
+                    self.powerups.append(p_instance)
+                    tp["spawned"] = True
+
         # Filtrar animales rescatados
         self.animals = [animal for animal in self.animals
                         if not (not animal.is_active and not animal.is_rescued and animal.has_been_rescued)]

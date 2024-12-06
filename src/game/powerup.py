@@ -19,8 +19,8 @@ class PowerUp:
         """
         self.x = x
         self.y = y
-        self.width = 16 * (SPRITE_SCALE - 1)
-        self.height = 16 * (SPRITE_SCALE - 1)
+        self.width = 16 * (SPRITE_SCALE)
+        self.height = 16 * (SPRITE_SCALE)
         self.sprite = load_image(image_path)
         self.sprite = pygame.transform.scale(self.sprite, (self.width, self.height))
         self.is_active = True  # power-up está disponible
