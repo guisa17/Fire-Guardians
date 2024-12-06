@@ -17,27 +17,29 @@ class MainGame:
         pygame.display.set_caption("Fire Guardians")
         self.level_index = 0
         self.running = True
-        self.runningmenu = True
-        self.state = None
-        
+        self.state = "menu"  # Estados: "menu", "game", "game_over"
+        self.current_gameplay = None
+        self.main_menu = MainMenu(self.screen)
+        self.game_over_screen = None
+
     def load_level(self):
         """
         Carga el nivel actual y pasa la configuración desde levels.py.
         """
         level_config = LEVELS[self.level_index]
-        self.state = GamePlay(
+        self.current_gameplay = GamePlay(
             screen=self.screen,
             level_config=level_config,
-            on_game_over=self.game_over,
+            on_game_over=self.trigger_game_over,
             on_level_complete=self.next_level,
         )
 
-    def game_over(self):
+    def trigger_game_over(self):
         """
-        Manejo del fin del juego.
+        Cambia el estado a Game Over.
         """
-        print("Game over")
-        self.running = False
+        self.state = "game_over"
+        self.game_over_screen = GameOver(self.screen)
 
     def next_level(self):
         """
@@ -49,64 +51,73 @@ class MainGame:
             self.load_level()
         else:
             print("Congratulations! You completed all levels.")
-            self.running = False    
-        
+            self.running = False
+
     async def run(self):
         """
         Bucle principal del juego.
         """
-        self.load_level()
         clock = pygame.time.Clock()
-        
-        # Crear el menú principal
-        main_menu = MainMenu(self.screen)
-        
-        # Bucle del menú principal
-        while self.runningmenu:
-            # Delta time
+
+        while self.running:
             dt = clock.tick(FPS) / 1000
 
-            # Manejar eventos
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.runningmenu = False
-                elif main_menu.handle_input(pygame.key.get_pressed()) == "start_game":
-                    self.runningmenu = False  # Salir del menú y comenzar el juego
-                    break
-                elif main_menu.handle_input(pygame.key.get_pressed()) == "instructions":
-                    print("Ir a instrucciones")  # Implementa las instrucciones si lo deseas
-                elif main_menu.handle_input(pygame.key.get_pressed()) == "credits":
-                    print("Ir a créditos")  # Implementa los créditos si lo deseas
+            if self.state == "menu":
+                # Manejo del menú principal
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
 
-            # Actualizar el menú
-            main_menu.update(dt)
+                selected = self.main_menu.handle_input(pygame.key.get_pressed())
+                if selected == "start_game":
+                    self.load_level()
+                    self.state = "game"
+                elif selected == "instructions":
+                    print("Ir a instrucciones")
+                elif selected == "credits":
+                    print("Ir a créditos")
 
-            # Dibujar el menú
-            main_menu.draw()
+                self.main_menu.update(dt)
+                self.main_menu.draw()
+                pygame.display.flip()
 
-            # Actualizar pantalla
-            pygame.display.flip()
-        
-        
-        while self.running:
-            # Procesar eventos
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+            elif self.state == "game":
+                # Manejo del juego
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+
+                keys = pygame.key.get_pressed()
+                if self.current_gameplay:
+                    self.current_gameplay.update(dt, keys)
+                    self.current_gameplay.draw()
+                    pygame.display.flip()
+
+                # Verificar si el jugador pierde todas las vidas
+                if self.current_gameplay.player.current_lives <= 0:
+                    self.trigger_game_over()
+
+            elif self.state == "game_over":
+                # Manejo de la pantalla Game Over
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+
+                keys = pygame.key.get_pressed()
+                selected = self.game_over_screen.handle_input(keys)
+
+                if selected == 0:  # Intentar de nuevo
+                    self.level_index = 0
+                    self.load_level()
+                    self.state = "game"
+                elif selected == 1:  # Salir
                     self.running = False
 
-            # Delta time y actualización del juego
-            dt = clock.tick(60) / 1000  # Limitar a 60 FPS
-            keys = pygame.key.get_pressed()
-
-            if self.state:
-                self.state.update(dt, keys)
-                self.state.draw()
-                pygame.display.flip()  # Actualizar pantalla
-
-            await asyncio.sleep(0)  # Permitir otras tareas del sistema
+                self.game_over_screen.update(dt)
+                self.game_over_screen.draw()
+                pygame.display.flip()
 
         pygame.quit()
-        
 
 
 if __name__ == "__main__":
