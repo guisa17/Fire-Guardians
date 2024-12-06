@@ -161,7 +161,7 @@ class Player:
                     if self.water > 0:
                         if self.space_press_count < 1:
                             self.space_press_count += 1
-                            fire.extinguish(15)
+                            fire.extinguish(10)
                             self.water -= 3     # diminuye agua !
         else:
             self.space_press_count = 0

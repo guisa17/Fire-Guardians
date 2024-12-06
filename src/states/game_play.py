@@ -15,8 +15,10 @@ class GamePlay:
         self.screen = screen
         self.level_file = level_config["level_file"]
         self.fire_spawn_interval = level_config["fire_spawn_interval"]
+        self.min_active_fires = level_config["min_active_fires"]
         self.max_active_fires = level_config["max_active_fires"]
         self.max_spread_fire = level_config["max_spread_fire"]
+        self.fire_intensity = level_config["fire_intensity"]
         self.time_limit = level_config["time_limit"]
         self.on_game_over = on_game_over
         self.on_level_complete = on_level_complete
@@ -26,7 +28,6 @@ class GamePlay:
 
         # Cargar spritesheet de tiles
         self.tiles_spritesheet = pygame.image.load("assets/images/tiles/tiles.png").convert_alpha()
-        # Cargar sprites de elementos
         self.element_sprites = self.load_element_sprites()
 
         # Inicializar entidades del nivel
@@ -39,7 +40,7 @@ class GamePlay:
         self.animation_timer = 0
 
         # Generar fuegos iniciales
-        for _ in range(self.max_active_fires):
+        for _ in range(self.min_active_fires):
             new_fire = self.create_random_fire()
             if new_fire:
                 self.fires.append(new_fire)
@@ -94,6 +95,9 @@ class GamePlay:
             if is_tile_walkable(self.level_data, fire_rect, tile_size):
                 if any(fire.get_rect().colliderect(fire_rect) for fire in self.fires):
                     continue
+                
+                fire = Fire(x, y)
+                fire.intensity = self.fire_intensity
                 return Fire(x, y)
 
         return None
@@ -146,10 +150,6 @@ class GamePlay:
         draw_tiles(self.screen, self.level_data["level"], self.tiles_spritesheet, 16, SPRITE_SCALE, self.animation_timer)
         draw_elements(self.screen, self.level_data["elements"], self.element_sprites)
 
-        # Dibujar fuegos
-        for fire in self.fires:
-            fire.draw(self.screen)
-
         # Dibujar estaciones de agua
         for water_station in self.water_stations:
             water_station.draw(self.screen)
@@ -157,3 +157,7 @@ class GamePlay:
         # Dibujar jugador y su HUD
         self.player.draw(self.screen)
         self.player.draw_hud(self.screen, self.total_time, self.remaining_time)
+
+        # Dibujar fuegos
+        for fire in self.fires:
+            fire.draw(self.screen)
