@@ -21,11 +21,11 @@ LEVELS = [
     },
     {
         "level_file": "assets/levels/2.json",
-        "fire_spawn_interval": 6,          # intervalo de aparición
+        "fire_spawn_interval": 6,           # intervalo de aparición
         "min_active_fires": 4,              # min fuegos activos
-        "max_active_fires": 10,              # max fuegos activos
+        "max_active_fires": 10,             # max fuegos activos
         "max_spread_fire": 5,               # max fuegos por spread
-        "fire_intensity": 120,
+        "fire_intensity": 110,
         "time_limit": 70,
         "animals": [
             {"type": "bear", "x": 282, "y": 282, "spawn_time": 10},
@@ -37,11 +37,11 @@ LEVELS = [
     },
     {
         "level_file": "assets/levels/3.json",
-        "fire_spawn_interval": 4,          # intervalo de aparición
+        "fire_spawn_interval": 4,           # intervalo de aparición
         "min_active_fires": 5,              # min fuegos activos
-        "max_active_fires": 15,              # max fuegos activos
+        "max_active_fires": 15,             # max fuegos activos
         "max_spread_fire": 7,               # max fuegos por spread
-        "fire_intensity": 140,
+        "fire_intensity": 120,
         "time_limit": 80,
         "animals": [
             {"type": "bear", "x": 282, "y": 282, "spawn_time": 10},
@@ -49,6 +49,26 @@ LEVELS = [
         ],
         "timed_powerups": [
             {"type": "WaterRefillPowerUp", "time": 40}
+        ]
+    },
+    {
+        "level_file": "assets/levels/4.json",
+        "fire_spawn_interval": 3,           # intervalo de aparición
+        "min_active_fires": 7,              # min fuegos activos
+        "max_active_fires": 20,             # max fuegos activos
+        "max_spread_fire": 10,              # max fuegos por spread
+        "fire_intensity": 130,
+        "time_limit": 90,
+        "animals": [
+            {"type": "bear", "x": 282, "y": 282, "spawn_time": 10},
+            {"type": "monkey", "x": 636, "y": 512, "spawn_time": 20}
+        ],
+        "timed_powerups": [
+            {"type": "WaterRefillPowerUp", "time": 20},
+            {"type": "ExtraLifePowerUp", "time": 30},
+            {"type": "WaterRefillPowerUp", "time": 40},
+            {"type": "ExtraLifePowerUp", "time": 50},
+            {"type": "WaterRefillPowerUp", "time": 60}
         ]
     }
 ]

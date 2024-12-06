@@ -13,7 +13,7 @@ class GamePlay:
     """
     Inicialización de la configuración del gameplay
     """
-    def __init__(self, screen, level_config, on_game_over, on_level_complete):
+    def __init__(self, screen, level_config, on_game_over, on_level_complete, level_index=0):
         self.screen = screen
         self.level_file = level_config["level_file"]
         self.fire_spawn_interval = level_config["fire_spawn_interval"]
@@ -24,6 +24,7 @@ class GamePlay:
         self.time_limit = level_config["time_limit"]
         self.on_game_over = on_game_over
         self.on_level_complete = on_level_complete
+        self.level_index = level_index
 
         # Inicializar datos del nivel
         self.level_data = load_level(self.level_file)
@@ -114,6 +115,12 @@ class GamePlay:
                 continue
 
             animal.is_active = False
+
+            # Incremento de vida
+            extra_life = 50 * self.level_index
+            animal.life += extra_life
+            animal.max_life += extra_life
+
             animals.append(animal)
         
         self.total_animals = len(animals)
