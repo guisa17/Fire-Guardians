@@ -7,6 +7,8 @@ from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from src.states.main_menu import MainMenu
 from src.states.game_over import GameOver
 from src.states.interstitial import InterstitialState
+from src.core.utils import load_sound
+import os
 
 
 class MainGame:
@@ -15,6 +17,7 @@ class MainGame:
         Inicializa la configuración principal del juego.
         """
         pygame.init()
+        pygame.mixer.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Fire Guardians")
         self.level_index = 0
@@ -23,6 +26,28 @@ class MainGame:
         self.current_gameplay = None
         self.main_menu = MainMenu(self.screen)
         self.game_over_screen = None
+        self.interstitial = None
+
+        # Cargar sonidos
+        self.sounds = {
+            "fire": load_sound("fire.wav"),
+            "game_over": load_sound("game_over.wav"),
+            "powerup": load_sound("powerup.wav"),
+            "steps": load_sound("steps.wav"),
+            "bird": load_sound("bird.wav"),
+            "bear": load_sound("bear.wav"),
+            "monkey": load_sound("monkey.wav"),
+            "recharge": load_sound("recharge.wav"),
+            "extinguish": load_sound("extinguish.wav")
+        }
+
+        # Música de fondo (gameplay.wav) se usa en el menú y juego
+        # Cargar música de fondo
+        bg_music_path = os.path.join("assets", "sounds", "gameplay.wav")
+        if not os.path.exists(bg_music_path):
+            raise FileNotFoundError("No se encontró gameplay.wav")
+        pygame.mixer.music.load(bg_music_path)
+        pygame.mixer.music.play(-1)  # loop
 
 
     def load_level(self):
@@ -35,9 +60,13 @@ class MainGame:
             level_config=level_config,
             on_game_over=self.trigger_game_over,
             on_level_complete=self.next_level,
-            level_index=self.level_index
+            level_index=self.level_index,
+            sounds=self.sounds
         )
         self.state = "game"
+
+        # pygame.mixer.music.stop()
+        # pygame.mixer.music.play(-1)
 
 
     def trigger_game_over(self):
@@ -45,6 +74,7 @@ class MainGame:
         Manejo del fin del juego.
         """
         print("Game over")
+        self.sounds["game_over"].play()
         self.state = "interstitial"
         self.interstitial = InterstitialState(self.screen, "game_over")
         self.game_over_screen = GameOver(self.screen)

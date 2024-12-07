@@ -13,7 +13,7 @@ from src.game.level_loader import load_level, is_tile_walkable
 
 
 class Player:
-    def __init__(self, x, y):
+    def __init__(self, x, y, sounds=None):
 
         """
         Inicialización del jugador
@@ -26,6 +26,7 @@ class Player:
         self.is_running = False
         self.animation_timer = 0
         self.frame_index = 0
+        self.sounds = sounds if sounds else {}
 
         self.max_lives = 5
         self.current_lives = 5
@@ -220,6 +221,8 @@ class Player:
         for powerup in powerups:
             if powerup.is_active and self.get_rect().colliderect(powerup.get_rect()):
                 powerup.apply_effect(self)
+                if not powerup.is_active:
+                    self.sounds["powerup"].play()
 
 
     def interact_with_animals(self, animals, keys, interaction_dist=60):

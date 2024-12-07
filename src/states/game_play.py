@@ -15,7 +15,7 @@ class GamePlay:
     """
     Inicialización de la configuración del gameplay
     """
-    def __init__(self, screen, level_config, on_game_over, on_level_complete, level_index=0):
+    def __init__(self, screen, level_config, on_game_over, on_level_complete, level_index=0, sounds=None):
         self.screen = screen
         self.level_file = level_config["level_file"]
         self.fire_spawn_interval = level_config["fire_spawn_interval"]
@@ -27,6 +27,7 @@ class GamePlay:
         self.on_game_over = on_game_over
         self.on_level_complete = on_level_complete
         self.level_index = level_index
+        self.sounds = sounds if sounds else {}
         
         self.special_mode_triggered = False
         self.special_extinguish_mode = False
@@ -92,6 +93,10 @@ class GamePlay:
             if new_fire:
                 self.fires.append(new_fire)
         
+        self.fire_sound_playing = False
+        self.recharge_sound_playing = False
+        self.steps_sound_playing = False
+        
 
     def load_element_sprites(self):
         """
@@ -107,7 +112,7 @@ class GamePlay:
         Inicializa al jugador en la posición inicial definida en el nivel.
         """
         start_position = self.level_data["player_start"]
-        return Player(start_position["x"], start_position["y"])
+        return Player(start_position["x"], start_position["y"], sounds=self.sounds)
 
 
     def initialize_water_stations(self):
@@ -231,6 +236,7 @@ class GamePlay:
                     for fire in self.fires:
                         if fire.is_active:
                             fire.extinguish(5)
+                    self.sounds["extinguish"].play()
 
 
     def update(self, dt, keys):
@@ -258,6 +264,29 @@ class GamePlay:
         # Actualizar la lógica del jugador
         self.player.update(dt, keys, self.level_data, 16 * SPRITE_SCALE, self.water_stations, self.animals)
 
+        # Sonido de pasos
+        if self.player.is_running:
+            if not self.steps_sound_playing:
+                self.sounds["steps"].play(-1)
+                self.sounds["steps"].set_volume(0.2)
+                self.steps_sound_playing = True
+        else:
+            if self.steps_sound_playing:
+                self.sounds["steps"].stop()
+                self.sounds["steps"].set_volume(0.2)
+                self.steps_sound_playing = False
+        
+        # Sonido de recarga
+        if keys[pygame.K_r]:
+            # Reproduces recarga si no suena ya
+            if not self.recharge_sound_playing:
+                self.sounds["recharge"].play(-1)
+                self.recharge_sound_playing = True
+        else:
+            if self.recharge_sound_playing:
+                self.sounds["recharge"].stop()
+                self.recharge_sound_playing = False
+
         # Si estamos modo especial
         if self.special_extinguish_mode:
             self.special_fire_extinguish(keys)
@@ -279,6 +308,15 @@ class GamePlay:
         
         # Tiempo transcurrido
         elapsed_time = self.total_time - self.remaining_time
+
+        # Control del sonido de fuego
+        active_fires_count = sum(f.is_active for f in self.fires)
+        if active_fires_count > 0 and not self.fire_sound_playing:
+            self.sounds["fire"].play(-1)
+            self.fire_sound_playing = True
+        elif active_fires_count == 0 and self.fire_sound_playing:
+            self.sounds["fire"].stop()
+            self.fire_sound_playing = False
 
         # Último nivel
         if self.is_last_level and not self.special_mode_triggered:
@@ -308,6 +346,13 @@ class GamePlay:
                 and not animal.has_been_rescued
                 and elapsed_time >= animal.spawn_time):
                 animal.is_active = True
+                # Reproducir sonido de animal
+                if isinstance(animal, Bird):
+                    self.sounds["bird"].play()
+                elif isinstance(animal, Bear):
+                    self.sounds["bear"].play()
+                elif isinstance(animal, Monkey):
+                    self.sounds["monkey"].play()
         
         # Actualizamos los animales
         for animal in self.animals:
@@ -319,6 +364,7 @@ class GamePlay:
                 new_powerup = animal.powerup_class(animal.x, animal.y)
                 self.powerups.append(new_powerup)
                 animal.notify_powerup = True
+                self.sounds["powerup"].play()
         
         # Contar animales rescatados
         for animal in self.animals:
@@ -334,6 +380,7 @@ class GamePlay:
                 if p_instance:
                     self.powerups.append(p_instance)
                     tp["spawned"] = True
+                    self.sounds["powerup"].play()
 
         # Filtrar animales rescatados
         self.animals = [animal for animal in self.animals
