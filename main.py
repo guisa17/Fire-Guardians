@@ -30,22 +30,22 @@ class MainGame:
 
         # Cargar sonidos
         self.sounds = {
-            "fire": load_sound("fire.wav"),
-            "game_over": load_sound("game_over.wav"),
-            "powerup": load_sound("powerup.wav"),
-            "steps": load_sound("steps.wav"),
-            "bird": load_sound("bird.wav"),
-            "bear": load_sound("bear.wav"),
-            "monkey": load_sound("monkey.wav"),
-            "recharge": load_sound("recharge.wav"),
-            "extinguish": load_sound("extinguish.wav")
+            "fire": load_sound("fire.ogg"),
+            "game_over": load_sound("game_over.ogg"),
+            "powerup": load_sound("powerup.ogg"),
+            "steps": load_sound("steps.ogg"),
+            "bird": load_sound("bird.ogg"),
+            "bear": load_sound("bear.ogg"),
+            "monkey": load_sound("monkey.ogg"),
+            "recharge": load_sound("recharge.ogg"),
+            "extinguish": load_sound("extinguish.ogg")
         }
 
         # Música de fondo (gameplay.wav) se usa en el menú y juego
         # Cargar música de fondo
-        bg_music_path = os.path.join("assets", "sounds", "gameplay.wav")
+        bg_music_path = os.path.join("assets", "sounds", "gameplay.ogg")
         if not os.path.exists(bg_music_path):
-            raise FileNotFoundError("No se encontró gameplay.wav")
+            raise FileNotFoundError("No se encontró gameplay.ogg")
         pygame.mixer.music.load(bg_music_path)
         pygame.mixer.music.play(-1)  # loop
 
