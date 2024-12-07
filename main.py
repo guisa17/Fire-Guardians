@@ -77,7 +77,7 @@ class MainGame:
         self.sounds["game_over"].play()
         self.state = "interstitial"
         self.interstitial = InterstitialState(self.screen, "game_over")
-        self.game_over_screen = GameOver(self.screen)
+        self.game_over_screen = GameOver(self.screen, message="Game Over")
 
 
     def next_level(self):
@@ -91,7 +91,8 @@ class MainGame:
             self.interstitial = InterstitialState(self.screen, "next_level")
         else:
             print("Congratulations! You completed all levels.")
-            self.running = False
+            self.state = "game_over"
+            self.game_over_screen = GameOver(self.screen, message="Thank you")
 
 
     async def run(self):

@@ -328,7 +328,7 @@ class GamePlay:
                     no_water_powerups = False
                     break
             
-            if elapsed_time >= 90 and no_animals_left and no_water_powerups:
+            if elapsed_time >= 60 and no_animals_left and no_water_powerups:
                 self.special_mode_triggered = True
                 self.special_extinguish_mode = True
                 self.player.water = 0

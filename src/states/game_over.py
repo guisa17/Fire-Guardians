@@ -1,8 +1,9 @@
 import pygame
 
 class GameOver:
-    def __init__(self, screen):
+    def __init__(self, screen, message="Game Over"):
         self.screen = screen
+        self.message = message
         self.font_title = pygame.font.Font("assets/fonts/font.ttf", 72)
         self.font_option = pygame.font.Font("assets/fonts/font.ttf", 40)
         self.selected_option = 0
@@ -14,7 +15,7 @@ class GameOver:
 
     def draw(self):
         self.screen.fill((0,0,0))
-        title_text = self.font_title.render("Game Over", True, (255, 0, 0))
+        title_text = self.font_title.render(self.message, True, (255, 0, 0))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2, 150))
         self.screen.blit(title_text, title_rect)
 
