@@ -6,6 +6,7 @@ from src.game.levels import LEVELS
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from src.states.main_menu import MainMenu
 from src.states.game_over import GameOver
+from src.states.interstitial import InterstitialState
 
 
 class MainGame:
@@ -16,7 +17,7 @@ class MainGame:
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Fire Guardians")
-        self.level_index = 4
+        self.level_index = 0
         self.running = True
         self.state = "menu"     # "menu", "game", "game_over"
         self.current_gameplay = None
@@ -44,7 +45,8 @@ class MainGame:
         Manejo del fin del juego.
         """
         print("Game over")
-        self.state = "game_over"
+        self.state = "interstitial"
+        self.interstitial = InterstitialState(self.screen, "game_over")
         self.game_over_screen = GameOver(self.screen)
 
 
@@ -55,7 +57,8 @@ class MainGame:
         self.level_index += 1
         if self.level_index < len(LEVELS):
             print(f"Loading level {self.level_index + 1}")
-            self.load_level()
+            self.state = "interstitial"
+            self.interstitial = InterstitialState(self.screen, "next_level")
         else:
             print("Congratulations! You completed all levels.")
             self.running = False
@@ -82,7 +85,7 @@ class MainGame:
                 selected = self.main_menu.handle_input(keys)
 
                 if selected == "start_game":
-                    self.level_index = 4
+                    self.level_index = 0
                     self.load_level()
                     # self.state = "game"
                 elif selected == "instructions":
@@ -99,6 +102,18 @@ class MainGame:
 
                     if self.current_gameplay.player.current_lives <= 0:
                         self.trigger_game_over()
+            
+            elif self.state == "interstitial":
+                self.interstitial.update(dt)
+                self.interstitial.draw()
+                pygame.display.flip()
+
+                if self.interstitial.is_finished():
+                    if self.interstitial.mode == "next_level":
+                        self.load_level()
+                    elif self.interstitial.mode == "game_over":
+                        self.state = "game_over"
+                        self.game_over_screen = GameOver(self.screen)
 
             elif self.state == "game_over":
                 if self.game_over_screen:
