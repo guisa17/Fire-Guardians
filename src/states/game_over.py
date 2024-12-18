@@ -10,7 +10,6 @@ class GameOver:
         self.options = ["Reintentar", "Salir"]
 
     def update(self, dt):
-        # Aquí podrías agregar animaciones si lo deseas
         pass
 
     def draw(self):
@@ -31,6 +30,5 @@ class GameOver:
         elif keys[pygame.K_DOWN]:
             self.selected_option = (self.selected_option + 1) % len(self.options)
         elif keys[pygame.K_SPACE]:
-            # Devolver índice de la opción seleccionada
             return self.selected_option
         return None

@@ -1,6 +1,7 @@
 import pygame
 from src.core.utils import load_image
 
+
 def render_text_with_outline(text, font, main_color, outline_color, outline_width):
     text_surface = font.render(text, True, main_color)
     outline_surface = font.render(text, True, outline_color)

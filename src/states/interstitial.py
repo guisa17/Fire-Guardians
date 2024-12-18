@@ -2,6 +2,7 @@ import pygame
 import random
 import textwrap
 
+
 class InterstitialState:
     def __init__(self, screen, mode):
         """
@@ -21,6 +22,7 @@ class InterstitialState:
 
         # Ajustar el texto al ancho de la pantalla
         self.lines = self.wrap_text(self.phrase, self.font, int(self.screen.get_width() * 0.8))
+
 
     def wrap_text(self, text, font, max_width):
         """
@@ -45,8 +47,10 @@ class InterstitialState:
 
         return lines
 
+
     def update(self, dt):
         self.timer -= dt
+
 
     def draw(self):
         self.screen.fill((0,0,0))
@@ -62,6 +66,7 @@ class InterstitialState:
             rect = surf.get_rect(center=(x_center, y_pos + surf.get_height()//2))
             self.screen.blit(surf, rect)
             y_pos += surf.get_height() + 5  # 5px de espacio entre líneas
+
 
     def is_finished(self):
         return self.timer <= 0
